@@ -1,0 +1,357 @@
+<title>GeeTaaa Theme Picker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=Syne:wght@600;800&family=Manrope:wght@400;600&family=Fraunces:opsz,wght@9..144,500;9..144,700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: sticky theme switcher on top; one preview stage below (hero, player, pricing) restyled purely by tokens. */
+:root{
+  --bg:#14110f;--surface:#1f1a17;--raised:#2a231e;--fg:#f2e9de;--muted:#a39583;--accent:#ff8a1f;--accent-fg:#1a0e00;--line:#3a3028;
+  --glow:0 0 24px rgba(255,138,31,.35);--radius:6px;
+  --f-display:'Oswald',Impact,sans-serif;--f-body:'IBM Plex Sans',system-ui,sans-serif;--tracking:.02em;--dtrans:uppercase;
+  --hero-bg:radial-gradient(ellipse at 70% 0%,rgba(255,138,31,.22),transparent 60%);
+}
+[data-t="neon"]{
+  --bg:#0a0713;--surface:#150f26;--raised:#1f1738;--fg:#f3eefe;--muted:#9b8fc0;--accent:#ff3ea5;--accent-fg:#fff;--line:#33264f;
+  --glow:0 0 28px rgba(255,62,165,.5),0 0 60px rgba(70,200,255,.15);--radius:16px;
+  --f-display:'Syne',sans-serif;--f-body:'Manrope',system-ui,sans-serif;--tracking:-.02em;--dtrans:none;
+  --hero-bg:radial-gradient(ellipse at 20% 0%,rgba(255,62,165,.28),transparent 55%),radial-gradient(ellipse at 90% 30%,rgba(70,200,255,.2),transparent 50%);
+}
+[data-t="paper"]{
+  --bg:#f6f4ee;--surface:#fffefb;--raised:#ebe8dc;--fg:#23261c;--muted:#6b6e5c;--accent:#4e5d2a;--accent-fg:#fffefb;--line:#d9d5c4;
+  --glow:none;--radius:3px;
+  --f-display:'Fraunces',Georgia,serif;--f-body:'DM Sans',system-ui,sans-serif;--tracking:-.01em;--dtrans:none;
+  --hero-bg:none;
+}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 var(--f-body);transition:background .3s}
+[data-t="paper"] ~ *{}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.picker{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:#111;border-bottom:1px solid #333;color:#eee;font-family:system-ui,sans-serif}
+.picker .wrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-block:10px}
+.picker b{margin-right:auto;font-size:14px}
+.picker button{background:#222;color:#eee;border:1px solid #444;border-radius:8px;padding:8px 14px;font:500 14px system-ui;cursor:pointer}
+.picker button[aria-pressed="true"]{background:#fff;color:#111;border-color:#fff}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stage{background:var(--bg);color:var(--fg)}
+nav.top{display:flex;gap:20px;align-items:center;padding-block:18px;flex-wrap:wrap}
+nav.top .logo{font:700 24px var(--f-display);letter-spacing:var(--tracking);text-transform:var(--dtrans);margin-right:auto}
+nav.top a{color:var(--muted);text-decoration:none;font-size:14px}
+.btn{display:inline-block;background:var(--accent);color:var(--accent-fg);border:0;border-radius:var(--radius);padding:12px 22px;font:600 15px var(--f-body);box-shadow:var(--glow);cursor:pointer;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line);box-shadow:none}
+.hero{background:var(--hero-bg);padding-block:56px 40px}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+.hero h1{font:700 clamp(40px,7vw,76px)/1 var(--f-display);letter-spacing:var(--tracking);text-transform:var(--dtrans);margin:0 0 18px;text-wrap:balance}
+.hero p{color:var(--muted);max-width:46ch;margin:0 0 26px}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+.hero-art{aspect-ratio:4/3;max-width:100%;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);position:relative;overflow:hidden;box-shadow:var(--glow)}
+.hero-art canvas{width:100%;height:100%;display:block}
+.hero-art small{position:absolute;left:12px;bottom:10px;color:var(--muted);font-size:12px}
+section.blk{padding-block:44px}
+h2{font:700 clamp(26px,4vw,38px)/1.1 var(--f-display);letter-spacing:var(--tracking);text-transform:var(--dtrans);margin:0 0 6px}
+.sub{color:var(--muted);margin:0 0 24px}
+.player{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;display:grid;gap:20px}
+.io{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+label.f{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+select{background:var(--raised);color:var(--fg);border:1px solid var(--line);border-radius:var(--radius);padding:10px;font:15px var(--f-body);min-width:0;width:100%}
+.inst{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 14px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:14px;background:transparent}
+.chip.on{border-color:var(--accent);color:var(--fg);box-shadow:var(--glow)}
+.chip.soon{opacity:.5}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.pedal{background:var(--raised);border:1px solid var(--line);border-radius:var(--radius);padding:14px;display:grid;gap:10px;justify-items:center;text-align:center}
+.pedal.off{opacity:.55}
+.pedal h4{margin:0;font:600 14px var(--f-display);letter-spacing:var(--tracking);text-transform:var(--dtrans)}
+.knobs{display:flex;gap:10px}
+.knob{width:38px;height:38px;border-radius:50%;background:conic-gradient(from 210deg,var(--accent) 0 var(--v,50%),var(--line) 0);position:relative}
+.knob::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--surface);border:1px solid var(--line)}
+.led{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.pedal:not(.off) .led{background:var(--accent);box-shadow:var(--glow)}
+.meters{display:flex;gap:3px;align-items:flex-end;height:46px}
+.meters i{flex:1;background:var(--accent);border-radius:1px;opacity:.9;height:20%;transition:height .08s}
+.meter-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;font-size:13px;color:var(--muted)}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.plan{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:24px;display:grid;gap:14px;align-content:start}
+.plan.hot{border-color:var(--accent);box-shadow:var(--glow)}
+.plan h3{margin:0;font:700 20px var(--f-display);letter-spacing:var(--tracking);text-transform:var(--dtrans)}
+.price{font:700 40px var(--f-display);font-variant-numeric:tabular-nums}
+.price span{font:400 14px var(--f-body);color:var(--muted)}
+.plan ul{margin:0;padding:0;list-style:none;display:grid;gap:8px;color:var(--muted);font-size:14px}
+.plan li::before{content:"+ ";color:var(--accent)}
+.mcp{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.mcp div{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;font-size:14px;min-width:0;overflow-wrap:anywhere}
+.mcp b{display:block;margin-bottom:4px}
+footer{padding-block:30px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+/* hero: centered copy + tilted marquee (mirrors 21st.dev AnimatedMarqueeHero) */
+.hero.centered{padding-bottom:0;overflow:hidden}
+.hero.centered .wrap{grid-template-columns:1fr;justify-items:center;text-align:center}
+.hero-copy{display:grid;justify-items:center}
+.hero-copy p{margin-inline:auto}
+.tag{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 16px;font-size:13px;margin-bottom:18px}
+.hero.centered .hero-art{display:none}
+.marquee{margin-top:36px;height:230px;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,transparent,#000 20%,#000 80%,transparent);mask-image:linear-gradient(to bottom,transparent,#000 20%,#000 80%,transparent)}
+.track{display:flex;gap:16px;width:max-content;animation:slide 40s linear infinite}
+.tile{width:150px;height:200px;border-radius:16px;border:1px solid var(--line);flex:none;background:linear-gradient(160deg,var(--raised),var(--surface));position:relative;overflow:hidden}
+.tile:nth-child(odd){transform:rotate(-2deg)}.tile:nth-child(even){transform:rotate(4deg) translateY(14px)}
+.tile::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 20%,var(--accent),transparent 60%);opacity:.35}
+.tile span{position:absolute;left:10px;bottom:8px;font-size:11px;color:var(--muted);z-index:1}
+@keyframes slide{to{transform:translateX(-50%)}}
+/* gradient button (mirrors 21st.dev GradientButton) */
+@property --gp{syntax:'<percentage>';initial-value:140%;inherits:false}
+@property --c2{syntax:'<color>';initial-value:#08012c;inherits:false}
+@property --c3{syntax:'<color>';initial-value:#4e1e40;inherits:false}
+.gbtn{--c2:color-mix(in srgb,var(--accent) 25%,#000);--c3:color-mix(in srgb,var(--accent) 55%,#000);border:1px solid color-mix(in srgb,var(--accent) 50%,transparent);border-radius:11px;padding:14px 32px;min-width:132px;color:#fff;font:600 15px var(--f-body);cursor:pointer;background:radial-gradient(150% 180% at 11% var(--gp),#000 37%,var(--c2) 61%,var(--c3) 100%);transition:--gp .5s,--c2 .5s,--c3 .5s}
+.gbtn:hover{--gp:90%;--c2:color-mix(in srgb,var(--accent) 70%,#000);--c3:var(--accent)}
+.gbtn.alt{--c2:#1f3f6d;--c3:#469396}.gbtn.alt:hover{--c2:#469396;--c3:#f1ffa5}
+[data-t="paper"] .gbtn{color:#fff}
+/* pricing (reference screenshot) */
+.pr-head{text-align:center;margin-bottom:32px}
+.pr-head span{font-size:14px}
+.pr-head h2{color:var(--muted);font-weight:500;text-transform:none;font-size:clamp(22px,3.4vw,32px);margin-top:14px}
+.plan{text-align:center;justify-items:center}
+.plan ul{width:100%;text-align:left;border-top:1px solid var(--line);padding-top:16px}
+.plan li::before{content:"✓ ";color:var(--muted)}
+.badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.pill{background:var(--raised);color:var(--fg);border-radius:999px;padding:3px 12px;font-size:12px;font-weight:600}
+.pill.solid{background:var(--fg);color:var(--bg)}
+.pd{margin:0;color:var(--muted);font-size:14px;max-width:26ch}
+.pbtn{width:100%;border:0;border-radius:var(--radius);padding:12px;background:var(--raised);color:var(--fg);font:600 15px var(--f-body);cursor:pointer}
+.pbtn.solid{background:var(--fg);color:var(--bg)}
+.plan.hot{box-shadow:none;border-color:var(--fg)}
+/* login (reference screenshot) */
+.auth{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface);min-height:520px}
+.auth-l{padding:28px;display:flex;flex-direction:column;justify-content:space-between;background:var(--raised);color:var(--muted);position:relative}
+.logo2{font:700 20px var(--f-display);color:var(--fg);text-transform:var(--dtrans)}
+.lines{position:absolute;left:0;right:0;top:25%;width:100%;height:45%;color:var(--accent);opacity:.45}
+.auth-l blockquote{margin:0;color:var(--fg);font-size:20px;line-height:1.35;position:relative}
+.auth-l cite{display:block;margin-top:10px;font-size:13px;color:var(--muted);font-style:normal}
+.auth-r{padding:40px 36px;display:grid;gap:10px;align-content:center}
+.auth-r h3{margin:0;font:700 26px var(--f-display);text-transform:var(--dtrans);letter-spacing:var(--tracking)}
+.auth-r .sub{margin:0 0 8px}
+.sbtn{border:0;border-radius:var(--radius);padding:12px;background:var(--raised);color:var(--fg);font:600 14px var(--f-body);cursor:pointer}
+.sbtn.solid{background:var(--fg);color:var(--bg)}
+.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:6px 0}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.auth-r input{background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:var(--radius);padding:12px;font:15px var(--f-body);min-width:0;width:100%}
+.auth-r label.f{font-size:12px}
+.terms{color:var(--muted);font-size:12px;margin-top:10px}
+[data-view="landing"] .A{display:none!important}
+[data-view="app"] .L{display:none!important}
+nav.top.A a.btn{margin-left:0}
+/* practice session */
+.session{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:14px}
+.srow{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.srow label.f{min-width:170px;flex:1}
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.seg button{background:transparent;color:var(--muted);border:0;padding:10px 14px;font:500 14px var(--f-body);cursor:pointer}
+.seg button.on{background:var(--accent);color:var(--accent-fg)}
+.chk{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--muted);padding-bottom:10px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stats div{background:var(--raised);border-radius:var(--radius);padding:10px 14px;border:1px solid var(--line)}
+.stats small{display:block;color:var(--muted);font-size:12px}
+.stats b{font:700 28px var(--f-display);font-variant-numeric:tabular-nums}
+.highway{border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);overflow:hidden}
+.highway canvas{width:100%;height:auto;display:block}
+.fretrow{display:grid;grid-template-columns:1fr 200px;gap:12px;align-items:stretch}
+.fretwrap{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:8px;min-width:0}
+.fretwrap svg{width:100%;height:auto;display:block}
+.cam{border:1px dashed var(--line);border-radius:var(--radius);display:grid;place-items:center;color:var(--muted);font-size:12px;min-height:130px;background:var(--raised)}
+@media(max-width:760px){.fretrow{grid-template-columns:1fr}}
+@media(max-width:760px){.hero .wrap{grid-template-columns:1fr}.auth{grid-template-columns:1fr}.auth-l{min-height:220px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="picker"><div class="wrap">
+  <b>GeeTaaa · เลือก theme</b>
+  <a href="#landing" style="color:#eee;font:500 14px system-ui">หน้า Landing</a>
+  <a href="#app" style="color:#eee;font:500 14px system-ui;margin-right:12px">หน้าใช้งาน (App)</a>
+  <button data-pick="amp" aria-pressed="true">1 Amp Glow</button>
+  <button data-pick="neon" aria-pressed="false">2 Neon Stage</button>
+  <button data-pick="paper" aria-pressed="false">3 Studio Paper</button>
+</div></div>
+
+<div class="stage" id="stage" data-t="amp" data-view="landing">
+ <div class="wrap">
+  <nav class="top L"><span class="logo">GeeTaaa</span><a href="#prod">Products</a><a href="#pr">Pricing</a><a href="#login">Log in</a><a class="btn" href="#app">Open app</a></nav>
+  <nav class="top A"><span class="logo">GeeTaaa</span><a href="#p">Player</a><a href="#play">Practice</a><a href="#s">Settings &amp; MCP</a><a class="btn ghost" href="#landing">Back to site</a></nav>
+ </div>
+ <header class="hero centered L"><div class="wrap">
+  <div class="hero-copy">
+   <span class="tag">Guitar first · more instruments soon</span>
+   <h1>Plug in. Pick a tone. Play.</h1>
+   <p>เล่นกีต้าผ่าน audio interface ในเบราว์เซอร์ เลือก input / output เอง ต่อ effect ได้ทันที ไม่ต้องลงโปรแกรม</p>
+   <div class="cta"><button class="gbtn">Start playing</button><button class="gbtn alt">See plans</button></div>
+  </div>
+  <div class="hero-art"><canvas id="wave" width="640" height="480"></canvas><small>Mock waveform</small></div>
+ </div>
+ <div class="marquee" aria-hidden="true"><div class="track" id="track"></div></div>
+ </header>
+
+ <section class="blk L" id="prod"><div class="wrap">
+  <h2>Products</h2><p class="sub">เริ่มจากกีต้า แล้วขยายไปเครื่องดนตรีอื่น</p>
+  <div class="mcp">
+   <div><b>Guitar · available</b>เล่นผ่าน audio interface พร้อม pedalboard และโหมดฝึกสเกล</div>
+   <div><b>Bass · soon</b>EQ และ compressor สำหรับเบส</div>
+   <div><b>Vocal · soon</b>Mic preamp, de-esser และ reverb</div>
+   <div><b>Keys · soon</b>รับ MIDI และเสียง synth ในตัว</div>
+  </div>
+ </div></section>
+
+ <section class="blk A" id="p"><div class="wrap">
+  <h2>Player</h2><p class="sub">เลือกเครื่องดนตรีก่อน แล้วต่อ audio interface</p>
+  <div class="player">
+   <div class="inst"><span class="chip on">Guitar</span><span class="chip soon">Bass · soon</span><span class="chip soon">Vocal · soon</span><span class="chip soon">Keys · soon</span></div>
+   <div class="io">
+    <label class="f">Input<select id="in"><option>Focusrite Scarlett 2i2 · Input 1</option><option>Built-in microphone</option></select></label>
+    <label class="f">Output<select id="out"><option>Focusrite Scarlett 2i2 · Monitor</option><option>Speakers</option></select></label>
+    <label class="f">Buffer<select><option>128 samples · ~5 ms</option><option>256 samples · ~10 ms</option></select></label>
+   </div>
+   <div class="board">
+    <div class="pedal"><h4>Noise Gate</h4><div class="knobs"><i class="knob" style="--v:30%"></i></div><span class="led"></span></div>
+    <div class="pedal"><h4>Overdrive</h4><div class="knobs"><i class="knob" style="--v:62%"></i><i class="knob" style="--v:45%"></i></div><span class="led"></span></div>
+    <div class="pedal"><h4>Amp EQ</h4><div class="knobs"><i class="knob" style="--v:55%"></i><i class="knob" style="--v:40%"></i><i class="knob" style="--v:70%"></i></div><span class="led"></span></div>
+    <div class="pedal off"><h4>Chorus</h4><div class="knobs"><i class="knob" style="--v:35%"></i></div><span class="led"></span></div>
+    <div class="pedal"><h4>Delay</h4><div class="knobs"><i class="knob" style="--v:48%"></i><i class="knob" style="--v:25%"></i></div><span class="led"></span></div>
+    <div class="pedal off"><h4>Reverb</h4><div class="knobs"><i class="knob" style="--v:60%"></i></div><span class="led"></span></div>
+   </div>
+   <div class="meter-row"><span>In</span><div class="meters" id="m"></div><span>-12 dB</span></div>
+  </div>
+ </div></section>
+
+ <section class="blk A" id="play"><div class="wrap">
+  <h2>Practice session</h2><p class="sub">หน้าตอนใช้งานจริง: เลือกสเกล โน้ตวิ่งเข้าหาเส้น แล้วเล่นตาม ระบบฟังเสียงจาก interface และให้คะแนน</p>
+  <div class="session">
+   <div class="srow">
+    <label class="f" for="scale">Scale<select id="scale"><option>A minor pentatonic · fret 5</option><option>A minor blues · fret 5</option><option>C major · fret 8</option></select></label>
+    <label class="f" for="spd">Speed <b id="spdv">80</b> BPM<input id="spd" type="range" min="40" max="160" value="80"></label>
+    <div class="seg" role="group" aria-label="Mode"><button class="on">Backing</button><button>Play real guitar</button></div>
+    <div class="seg" role="group" aria-label="Judge"><button class="on">On beat</button><button>Any time</button></div>
+    <label class="chk"><input type="checkbox" checked> Show names</label>
+    <label class="chk"><input type="checkbox" checked> Metronome</label>
+   </div>
+   <div class="srow">
+    <label class="f" for="in2">Input<select id="in2"><option>Default · GP-150 Audio</option><option>Focusrite Scarlett 2i2</option></select></label>
+    <label class="f" for="ch">Channel<select id="ch"><option>Mono · all channels</option><option>Left</option><option>Right</option></select></label>
+    <label class="f" for="out2">Output<select id="out2"><option>MacBook Pro Speakers</option><option>Focusrite Monitor</option></select></label>
+   </div>
+   <div class="stats"><div><small>Score</small><b id="sc">0</b></div><div><small>Combo</small><b id="cb">0</b></div><div><small>Accuracy</small><b id="ac">–</b></div></div>
+   <div class="highway"><canvas id="hw" width="960" height="260"></canvas></div>
+   <div class="fretrow">
+    <div class="fretwrap"><svg id="fret" viewBox="0 0 600 150" role="img" aria-label="Fretboard"></svg></div>
+    <div class="cam"><span>Camera (optional)</span></div>
+   </div>
+   <div class="srow"><button class="gbtn" id="go">Start</button><button class="gbtn alt">Tune first</button><small class="terms" id="mic">Mic level: -18 dB · latency ~6 ms (mock)</small></div>
+  </div>
+ </div></section>
+
+ <section class="blk L" id="pr"><div class="wrap">
+  <div class="pr-head"><span>Pricing</span><h2>Select the plan that best suits your playing</h2></div>
+  <div class="plans">
+   <div class="plan"><div class="badges"><span class="pill">Free</span></div><div class="price">฿0<span>/month</span></div><p class="pd">ลองเล่นและทดสอบ interface ของคุณ</p><ul><li>Guitar player</li><li>3 effects</li><li>1 preset</li><li>Buffer 256</li></ul><button class="pbtn">Choose Free</button></div>
+   <div class="plan hot"><div class="badges"><span class="pill solid">Pro</span><span class="pill">Most popular</span></div><div class="price">฿199<span>/month</span></div><p class="pd">สำหรับคนที่เล่นทุกวันและอยากได้ latency ต่ำ</p><ul><li>All effects</li><li>Unlimited presets</li><li>Lowest buffer</li><li>Recording</li></ul><button class="pbtn solid">Choose Pro</button></div>
+   <div class="plan"><div class="badges"><span class="pill">Studio</span></div><div class="price">฿499<span>/month</span></div><p class="pd">ทุกเครื่องดนตรี ทีม และ AI ผ่าน MCP</p><ul><li>All instruments</li><li>MCP integration</li><li>Team presets</li><li>Priority support</li></ul><button class="pbtn">Choose Studio</button></div>
+  </div>
+ </div></section>
+
+ <section class="blk L" id="login"><div class="wrap">
+  <div class="auth">
+   <div class="auth-l"><span class="logo2">GeeTaaa</span><svg class="lines" viewBox="0 0 400 220" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1" id="ln"></g></svg><blockquote>“Latency ต่ำพอที่จะลืมไปเลยว่ากำลังเล่นผ่านเบราว์เซอร์”<cite>~ Nok, session guitarist</cite></blockquote></div>
+   <div class="auth-r">
+    <h3>Sign in or join now</h3><p class="sub">login หรือสร้างบัญชี GeeTaaa</p>
+    <button class="sbtn">Continue with Google</button><button class="sbtn">Continue with Apple</button><button class="sbtn">Continue with GitHub</button>
+    <div class="or"><span>OR</span></div>
+    <label class="f" for="em">Enter your email to sign in or create an account</label>
+    <input id="em" type="email" placeholder="your.email@example.com">
+    <button class="sbtn solid">Continue with email</button>
+    <small class="terms">By continuing, you agree to the Terms of Service and Privacy Policy.</small>
+   </div>
+  </div>
+ </div></section>
+
+ <section class="blk A" id="s"><div class="wrap">
+  <h2>Settings · MCP</h2><p class="sub">เชื่อม MCP server เพื่อให้ AI ช่วยตั้ง tone</p>
+  <div class="mcp"><div><b>tone-assistant</b>https://mcp.example.com/tone · connected</div><div><b>preset-library</b>https://mcp.example.com/presets · idle</div><div><b>+ Add server</b>วาง URL และ token</div></div>
+ </div></section>
+ <footer><div class="wrap">GeeTaaa · mockup for theme selection</div></footer>
+</div>
+
+<script>
+(function(){
+  var st=document.getElementById('stage');
+  document.querySelectorAll('[data-pick]').forEach(function(b){
+    b.addEventListener('click',function(){
+      st.setAttribute('data-t',b.dataset.pick);
+      document.querySelectorAll('[data-pick]').forEach(function(x){x.setAttribute('aria-pressed',x===b)});
+      document.documentElement.style.colorScheme=b.dataset.pick==='paper'?'light':'dark';
+      document.body.style.background=getComputedStyle(st).getPropertyValue('--bg');
+    });
+  });
+  var tr=document.getElementById('track'),names=['Strat','Amp','Pedals','Studio','Les Paul','Stage','Tele','Tubes'];
+  for(var k=0;k<2;k++)names.forEach(function(n){var d=document.createElement('div');d.className='tile';d.innerHTML='<span>'+n+' · รูปจริงภายหลัง</span>';tr.appendChild(d)});
+  var ln=document.getElementById('ln'),p='';
+  for(var j=0;j<18;j++){p+='<path d="M0 '+(200-j*4)+' C 120 '+(190-j*9)+', 260 '+(120-j*3)+', 400 '+(20+j*6)+'"/>'}
+  ln.innerHTML=p;
+  // hash router: landing vs app
+  var appIds=['app','p','play','s'];
+  function route(){
+    var h=location.hash.slice(1);
+    st.setAttribute('data-view',appIds.indexOf(h)>-1?'app':'landing');
+    var el=h&&h!=='app'&&h!=='landing'?document.getElementById(h):null;
+    if(el)el.scrollIntoView();else window.scrollTo(0,0);
+  }
+  window.addEventListener('hashchange',route);route();
+  // practice session mock
+  var pos=[[0,5],[0,8],[1,5],[1,7],[2,5],[2,7],[3,5],[3,7],[4,5],[4,8],[5,5],[5,8]]; // [string low->high, fret]
+  var sv=document.getElementById('spd');sv.addEventListener('input',function(){document.getElementById('spdv').textContent=sv.value});
+  document.querySelectorAll('.seg').forEach(function(g){g.addEventListener('click',function(e){if(e.target.tagName!=='BUTTON')return;g.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b===e.target)})})});
+  var fr=document.getElementById('fret'),h='',names=['E','A','D','G','B','e'];
+  for(var s=0;s<6;s++){h+='<line x1="30" x2="590" y1="'+(20+s*22)+'" y2="'+(20+s*22)+'" stroke="currentColor" opacity=".5" stroke-width="'+(1+(5-s)*.2)+'"/><text x="8" y="'+(24+s*22)+'" font-size="11" fill="currentColor" opacity=".6">'+names[5-s]+'</text>'}
+  for(var f=0;f<=6;f++){h+='<line y1="20" y2="130" x1="'+(30+f*93)+'" x2="'+(30+f*93)+'" stroke="currentColor" opacity=".3"/>'+(f<6?'<text x="'+(70+f*93)+'" y="146" font-size="10" fill="currentColor" opacity=".6">'+(5+f)+'</text>':'')}
+  pos.forEach(function(p,i){var x=30+(p[1]-5)*93+46,y=20+(5-p[0])*22;h+='<circle class="fn" data-i="'+i+'" cx="'+x+'" cy="'+y+'" r="8" fill="'+(p[1]===5?'var(--accent)':'var(--line)')+'"/>'});
+  fr.innerHTML=h;
+  var hw=document.getElementById('hw'),hx=hw.getContext('2d'),notes=[],run=false,score=0,combo=0,hit=0,tot=0,tt=0;
+  document.getElementById('go').addEventListener('click',function(e){run=!run;e.target.textContent=run?'Stop':'Start'});
+  function hwdraw(){
+    var cs=getComputedStyle(st),a=cs.getPropertyValue('--accent').trim(),ln=cs.getPropertyValue('--line').trim(),fg=cs.getPropertyValue('--fg').trim(),mu=cs.getPropertyValue('--muted').trim();
+    hx.clearRect(0,0,960,260);
+    for(var s=0;s<6;s++){hx.strokeStyle=ln;hx.beginPath();hx.moveTo(0,25+s*42);hx.lineTo(960,25+s*42);hx.stroke();hx.fillStyle=mu;hx.font='12px sans-serif';hx.fillText(names[5-s],8,29+s*42)}
+    hx.strokeStyle=a;hx.lineWidth=3;hx.beginPath();hx.moveTo(110,0);hx.lineTo(110,260);hx.stroke();hx.lineWidth=1;
+    var spd=+sv.value/80;
+    if(run){tt+=1;if(tt%Math.round(60/spd)===0){var q=pos[Math.floor(Math.random()*pos.length)];notes.push({x:960,s:q[0],f:q[1]})}}
+    notes.forEach(function(n){
+      if(run)n.x-=3.2*spd;
+      var y=25+(5-n.s)*42;
+      if(!n.done&&n.x<=110&&n.x>60){n.done=1;tot++;if(Math.random()<.85){hit++;combo++;score+=100+combo*5}else combo=0;
+        document.getElementById('sc').textContent=score;document.getElementById('cb').textContent=combo;document.getElementById('ac').textContent=Math.round(hit/tot*100)+'%'}
+      hx.fillStyle=n.done?a:fg;hx.globalAlpha=n.x<60?.3:1;hx.beginPath();hx.arc(n.x,y,15,0,7);hx.fill();
+      hx.globalAlpha=1;hx.fillStyle=cs.getPropertyValue('--bg').trim();hx.font='bold 13px sans-serif';hx.textAlign='center';hx.fillText(n.f,n.x,y+5);hx.textAlign='left';
+    });
+    notes=notes.filter(function(n){return n.x>-20});
+    if(!matchMedia('(prefers-reduced-motion: reduce)').matches)requestAnimationFrame(hwdraw);
+  }
+  hwdraw();
+  var m=document.getElementById('m');
+  for(var i=0;i<32;i++){m.appendChild(document.createElement('i'))}
+  var bars=m.children,t=0;
+  var cv=document.getElementById('wave'),cx=cv.getContext('2d');
+  function frame(){
+    t+=0.05;
+    for(var i=0;i<bars.length;i++){bars[i].style.height=(18+60*Math.abs(Math.sin(t+i*.4))*Math.abs(Math.sin(t*.7+i*.15)))+'%'}
+    var cs=getComputedStyle(st),a=cs.getPropertyValue('--accent').trim(),ln=cs.getPropertyValue('--line').trim();
+    cx.clearRect(0,0,640,480);
+    cx.strokeStyle=ln;cx.lineWidth=1;
+    for(var y=60;y<480;y+=60){cx.beginPath();cx.moveTo(0,y);cx.lineTo(640,y);cx.stroke()}
+    cx.strokeStyle=a;cx.lineWidth=3;cx.beginPath();
+    for(var x=0;x<=640;x+=4){
+      var env=Math.sin(x/640*Math.PI);
+      var y2=240+env*110*Math.sin(x*.045+t*3)*Math.sin(x*.011+t);
+      x?cx.lineTo(x,y2):cx.moveTo(x,y2);
+    }
+    cx.stroke();
+    if(!matchMedia('(prefers-reduced-motion: reduce)').matches)requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>

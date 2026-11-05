@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Chromatoplectrumology
 
-## Getting Started
+Practice guitar in the browser. Plug in an audio interface, pick your input and output, shape your tone with effects, and play along with scales while the app listens and scores you. Built to grow into other instruments; guitar is the first.
 
-First, run the development server:
+## Features
+
+- Audio interface input/output selection, live effects (overdrive, amp EQ, chorus, delay, reverb)
+- Scale practice with pitch detection, combo and accuracy scoring, fretboard and tuner, metronome
+- Every word on the site comes from the database, in many languages, with an admin page to edit it (`/th`, `/en`, `/jp`, `/lo` ...)
+- Accounts with an admin role; admin pages for translations, languages, instruments, scales, effects and photos
+- Light and dark themes, animated landing page, instrument picker
+
+## Stack
+
+Next.js 16 (App Router, Cache Components), React 19, Tailwind CSS 4, Drizzle ORM with Neon Postgres, Better Auth, Web Audio API.
+
+## Run it
 
 ```bash
+npm install
+# .env.local needs DATABASE_URL and BETTER_AUTH_SECRET
+npm run db:push     # create tables
+npm run db:seed     # languages, translations, catalog
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Make yourself an admin after signing up: `npm run make-admin -- you@example.com`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Photos are from Unsplash (credits in `public/images/instruments/CREDITS.md`). Translations other than English and Thai are machine drafts and should be reviewed by native speakers.

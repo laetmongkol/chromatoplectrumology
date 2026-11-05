@@ -1,0 +1,308 @@
+<title>GeeTaaa</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: one working screen. Quiet monochrome editorial controls; the single iridescent surface is the note stage. Style ref: monopo saigon (light, 0px corners, 75px pills, no shadows). */
+:root{
+  --paper:#fff;--ink:#000;--ink2:#181818;--muted:#6d6d6d;--line:#d9d9d9;--mist:#9a9a9a;--slate:#636363;
+  --irid:linear-gradient(90deg,rgb(160,224,171),rgb(255,172,46) 50%,rgb(165,45,37));
+  --font:'Inter',ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --ease:cubic-bezier(.19,1,.22,1);
+}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.4 var(--font)}
+.wrap{max-width:1078px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;align-items:center;gap:28px;padding-block:20px;flex-wrap:wrap}
+header.top .logo{margin-right:auto;font-size:16px}
+header.top a{color:var(--ink);text-decoration:none;font-size:12px;text-transform:uppercase}
+a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+h1{font-weight:300;font-size:clamp(40px,8vw,78px);line-height:1.05;margin:36px 0 8px;text-wrap:balance}
+.lead{color:var(--muted);max-width:52ch;margin:0 0 36px}
+.sec{padding-block:23px;border-top:1px solid var(--ink)}
+.sec h2{font-size:12px;font-weight:400;text-transform:uppercase;margin:0 0 18px;display:flex;justify-content:space-between}
+.sec h2 span{color:var(--muted);text-transform:none}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+label.f{display:grid;gap:6px;font-size:12px;color:var(--muted);flex:1;min-width:180px}
+select,input[type=text]{background:var(--paper);color:var(--ink);border:1px solid var(--ink);border-radius:0;padding:11px 12px;font:400 15px var(--font);min-width:0;width:100%}
+input[type=range]{width:100%;accent-color:#000}
+.pill{background:transparent;color:var(--ink);border:1px solid var(--ink);border-radius:75px;padding:11px 33px;font:400 16px var(--font);cursor:pointer;transition:background .8s var(--ease),color .8s var(--ease)}
+.pill:hover,.pill.on{background:var(--ink);color:var(--paper)}
+.pill.sm{padding:6px 16px;font-size:13px}
+.pill.light{color:#fff;border-color:rgba(255,255,255,.5)}
+.pill.light:hover{background:#fff;color:#000}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);border-radius:75px;padding:6px 16px;font-size:13px;color:var(--muted)}
+.chip.on{border-color:var(--ink);color:var(--ink)}
+.meterline{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;font-size:12px;color:var(--muted);margin-top:14px}
+.bar{height:6px;background:var(--line);position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;width:40%;background:var(--ink);transition:width .08s}
+.stage{position:relative;background:#000;margin-inline:calc(50% - 50vw);width:100vw}
+.stage .in{max-width:1078px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px))}
+.stage canvas{width:100%;height:auto;display:block;aspect-ratio:1078/300}
+.stagebar{position:absolute;left:0;right:0;bottom:0;padding:14px max(16px,env(safe-area-inset-left,0px));display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:28px}
+.stats small{display:block;font-size:12px;color:var(--muted);text-transform:uppercase}
+.stats b{font-weight:300;font-size:clamp(40px,7vw,78px);line-height:1;font-variant-numeric:tabular-nums}
+.two{display:grid;grid-template-columns:1fr 220px;gap:14px}
+.fretwrap{border:1px solid var(--ink);padding:10px;min-width:0}
+.fretwrap svg{width:100%;height:auto;display:block}
+.cam{border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);font-size:12px;min-height:140px;text-align:center;padding:8px}
+.fx{display:grid;gap:0}
+.fx .r{display:grid;grid-template-columns:140px 1fr auto;gap:18px;align-items:center;padding-block:12px;border-bottom:1px solid var(--line)}
+.fx .r b{font-weight:400}
+.note{color:var(--muted);font-size:12px;margin-top:10px}
+footer{padding-block:40px 60px;color:var(--muted);font-size:11px;line-height:1.5}
+/* hit impact */
+.stats b{display:inline-block}
+.stats b.pop{animation:pop .5s var(--ease)}
+@keyframes pop{0%{transform:scale(1.4)}100%{transform:scale(1)}}
+/* landing */
+.irid{background:radial-gradient(circle at 18% 30%,rgb(160,224,171),transparent 55%),radial-gradient(circle at 68% 62%,rgb(255,172,46),transparent 55%),radial-gradient(circle at 95% 95%,rgb(165,45,37),transparent 60%),#1a0d0a}
+.L-hero{position:relative;background:#1a0d0a;color:#fff;overflow:hidden}
+.L-hero canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.L-nav{position:absolute;top:0;left:0;right:0;z-index:2}
+.L-nav .wrap{display:flex;gap:28px;align-items:center;padding-block:20px;flex-wrap:wrap}
+.L-nav a{color:#fff;font-size:12px;text-transform:uppercase;text-decoration:none}
+.L-nav .logo{margin-right:auto;font-size:16px;text-transform:none}
+.L-title{position:relative;z-index:1;text-align:center;padding:150px 16px 120px}
+.L-title h1{font-weight:400;font-size:clamp(72px,19vw,225px);line-height:.9;margin:0 0 28px;color:#fff}
+.L-title p{margin:0 auto 28px;max-width:44ch;color:rgba(255,255,255,.85)}
+.badge{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:16px;width:92px;height:92px;z-index:2;color:#fff}
+.badge svg{width:100%;height:100%;animation:spin 18s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.L-manifesto{padding-block:96px 56px}
+.L-manifesto h2{font-weight:300;font-size:clamp(34px,7vw,78px);line-height:1.1;margin:0;max-width:16ch}
+.L-row{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;padding-block:46px;border-top:1px solid var(--ink)}
+.L-row:nth-of-type(even) .vis{order:-1}
+.L-row h3{font-weight:400;font-size:clamp(28px,4.5vw,45px);line-height:1.15;margin:0 0 14px}
+.L-row p{color:var(--muted);max-width:40ch;margin:0}
+.L-row small{display:block;font-size:12px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.vis{aspect-ratio:4/3;max-width:100%;position:relative;overflow:hidden;color:#fff;display:grid;place-items:center}
+.vis .ui{display:grid;gap:10px;width:70%}
+.vis .ui span{border:1px solid rgba(255,255,255,.7);padding:10px 12px;font-size:13px}
+.vis .big{font-weight:300;font-size:clamp(56px,11vw,110px);line-height:1}
+.vis .dots{position:absolute;inset:0}
+.vis .dots i{position:absolute;width:26px;height:26px;border-radius:50%;background:#fff}
+.vis .hl{position:absolute;left:18%;top:10%;bottom:10%;width:2px;background:#fff}
+.flist{list-style:none;margin:0;padding:0}
+.flist li{display:flex;justify-content:space-between;gap:20px;padding:20px 0;border-top:1px solid var(--line)}
+.flist li:last-child{border-bottom:1px solid var(--line)}
+.flist b{font-weight:400;font-size:18px}
+.flist span{color:var(--muted);font-size:14px;text-align:right}
+.L-band{background:#000;color:#fff;padding-block:110px;margin-top:64px}
+.L-band h2{font-weight:300;font-size:clamp(36px,7vw,78px);line-height:1.1;margin:0 0 32px;max-width:14ch}
+.L-foot{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:28px;padding-block:48px 64px;font-size:11px;line-height:1.5;color:var(--muted)}
+.L-foot b{display:block;font-weight:400;color:var(--ink);margin-bottom:6px}
+@media(max-width:700px){.L-row{grid-template-columns:1fr}.L-row:nth-of-type(even) .vis{order:0}.L-title{padding-top:130px}}
+@media(max-width:700px){.two{grid-template-columns:1fr}.fx .r{grid-template-columns:100px 1fr auto;gap:10px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div id="v-landing">
+ <div class="L-hero">
+  <canvas id="lbg" width="1200" height="720" aria-hidden="true"></canvas>
+  <div class="L-nav"><div class="wrap"><span class="logo">GeeTaaa</span><a href="#how">How it works</a><a href="#features">Features</a><a href="#app">Open app</a></div></div>
+  <div class="L-title">
+   <h1>Plug in.</h1>
+   <p>เล่นกีต้าผ่าน audio interface ในเบราว์เซอร์ เลือกสเกล เล่นตามโน้ต แล้วฟังเสียงตัวเองพร้อม effect</p>
+   <button class="pill light" data-go="app">Start playing</button>
+  </div>
+  <div class="badge" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><path id="cp" d="M50,50 m-38,0 a38,38 0 1,1 76,0 a38,38 0 1,1 -76,0"/></defs><text font-size="9.5" fill="currentColor" letter-spacing="1.5"><textPath href="#cp">SCROLL DOWN · SCROLL DOWN · SCROLL DOWN ·</textPath></text></svg></div>
+ </div>
+
+ <div class="wrap">
+  <section class="L-manifesto"><h2>Your guitar. Your interface. One browser tab.</h2></section>
+
+  <section id="how">
+   <div class="L-row"><div><small>Step 1</small><h3>Plug in</h3><p>ต่อ interface แล้วเลือก input, channel และ output ของคุณเอง ไม่ต้องลงโปรแกรมหรือ driver เพิ่ม</p></div>
+    <div class="vis irid"><div class="ui"><span>Input · Focusrite Scarlett 2i2</span><span>Channel · Input 1</span><span>Output · Monitor</span></div></div></div>
+   <div class="L-row"><div><small>Step 2</small><h3>Pick a scale</h3><p>เลือกสเกลและตำแหน่ง โน้ตวิ่งเข้าหาเส้น พร้อมคอนกีต้าบอกว่าต้องกดที่ไหน</p></div>
+    <div class="vis irid"><span class="hl"></span><div class="dots"><i style="left:48%;top:18%"></i><i style="left:62%;top:36%"></i><i style="left:36%;top:54%"></i><i style="left:78%;top:70%"></i></div></div></div>
+   <div class="L-row"><div><small>Step 3</small><h3>Play it back</h3><p>ระบบฟังเสียงจริง ตรวจจังหวะและโน้ต ให้คะแนน combo และ accuracy ทันที เล่นถูกแล้วจะรู้สึกได้</p></div>
+    <div class="vis irid"><span class="big">98%</span></div></div>
+  </section>
+
+  <section id="features" style="padding-block:56px 0">
+   <ul class="flist">
+    <li><b>Audio interface</b><span>เลือก input และ output เอง</span></li>
+    <li><b>Scale practice</b><span>คะแนน combo accuracy</span></li>
+    <li><b>Effect chain</b><span>Gate, Drive, Amp, Chorus, Delay, Reverb</span></li>
+    <li><b>Fretboard view</b><span>เห็นโน้ตบนคอกีต้า</span></li>
+    <li><b>Tuner</b><span>จูนก่อนเล่น</span></li>
+    <li><b>Bass, Vocal, Keys</b><span>เร็วๆ นี้</span></li>
+   </ul>
+  </section>
+ </div>
+
+ <div class="L-band"><div class="wrap"><h2>Latency you forget about.</h2><button class="pill light" data-go="app">Open the app</button></div></div>
+ <div class="wrap"><div class="L-foot">
+  <div><b>Browser</b>ใช้ได้ดีที่สุดใน Chrome และ Edge Safari และ Firefox เลือก output ไม่ได้</div>
+  <div><b>Hardware</b>audio interface แบบ USB หรือไมค์ในเครื่อง ใช้หูฟังเพื่อลด feedback</div>
+  <div><b>GeeTaaa</b>Guitar practice in the browser</div>
+ </div></div>
+</div>
+
+<div id="v-app" hidden>
+<div class="wrap">
+ <header class="top"><span class="logo">GeeTaaa</span><a href="#practice">Practice</a><a href="#audio">Audio</a><a href="#tone">Tone</a><a href="#landing">Site</a></header>
+ <h1>Pick a scale.<br>Play it back.</h1>
+ <p class="lead">เลือกสเกล โน้ตจะวิ่งเข้าหาเส้น เล่นกีต้าจริงผ่าน audio interface แล้วระบบฟังและให้คะแนนทันที</p>
+
+ <section class="sec" id="practice">
+  <h2>Instrument <span>ตอนนี้มีกีต้า</span></h2>
+  <div class="chips"><span class="chip on">Guitar</span><span class="chip">Bass · soon</span><span class="chip">Vocal · soon</span><span class="chip">Keys · soon</span></div>
+ </section>
+
+ <section class="sec" id="audio">
+  <h2>Audio <span>เลือก input และ output ของ interface</span></h2>
+  <div class="row">
+   <label class="f" for="in">Input<select id="in"><option>Default · GP-150 Audio</option><option>Focusrite Scarlett 2i2 · USB</option><option>Built-in microphone</option></select></label>
+   <label class="f" for="ch">Channel<select id="ch"><option>Mono · all channels</option><option>Input 1 (left)</option><option>Input 2 (right)</option></select></label>
+   <label class="f" for="out">Output<select id="out"><option>MacBook Pro Speakers</option><option>Focusrite Scarlett 2i2 · Monitor</option><option>Headphones</option></select></label>
+   <label class="f" for="buf">Buffer<select id="buf"><option>128 samples · ~5 ms</option><option>256 samples · ~10 ms</option><option>512 samples · ~21 ms</option></select></label>
+  </div>
+  <div class="meterline"><span>Input level</span><div class="bar"><i id="lvl"></i></div><span id="lvlt">-18 dB</span></div>
+  <p class="note">Mockup: ตัววัดระดับขยับจำลอง เวอร์ชันจริงอ่านจาก input ที่เลือก</p>
+ </section>
+
+ <section class="sec">
+  <h2>Lesson</h2>
+  <div class="row">
+   <label class="f" for="scale">Scale<select id="scale"><option>A minor pentatonic · fret 5</option><option>A minor blues · fret 5</option><option>C major · fret 8</option><option>E minor pentatonic · fret 12</option></select></label>
+   <label class="f" for="spd">Speed · <span id="spdv">80</span> BPM<input id="spd" type="range" min="40" max="160" value="80"></label>
+   <div class="chips" role="group" aria-label="Mode"><button class="pill sm on" data-g="mode">Backing track</button><button class="pill sm" data-g="mode">Play real guitar</button></div>
+   <div class="chips" role="group" aria-label="Judge"><button class="pill sm on" data-g="j">On beat</button><button class="pill sm" data-g="j">Any time</button></div>
+  </div>
+ </section>
+</div>
+
+<div class="stage"><div class="in"><canvas id="hw" width="1078" height="300"></canvas></div>
+ <div class="stagebar"><button class="pill light" id="go">Start</button><button class="pill light" id="tune">Tune first</button></div></div>
+
+<div class="wrap">
+ <div class="stats"><div><small>Score</small><b id="sc">0</b></div><div><small>Combo</small><b id="cb">0</b></div><div><small>Accuracy</small><b id="ac">–</b></div></div>
+
+ <section class="sec" style="margin-top:36px">
+  <h2>Fretboard <span>โน้ตที่ต้องเล่น</span></h2>
+  <div class="two"><div class="fretwrap"><svg id="fret" viewBox="0 0 600 150" role="img" aria-label="Fretboard"></svg></div><div class="cam">Camera (optional)<br>ดูมือตัวเองตอนฝึก</div></div>
+ </section>
+
+ <section class="sec" id="tone">
+  <h2>Tone <span>effect chain ตามลำดับ</span></h2>
+  <div class="fx" id="fx"></div>
+ </section>
+
+ <footer>GeeTaaa · mockup<br>Guitar practice in the browser</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  // router: #app (and its anchors) = app, everything else = landing
+  var appIds=['app','practice','audio','tone'];
+  function route(){
+    var h=location.hash.slice(1),isApp=appIds.indexOf(h)>-1;
+    $('v-app').hidden=!isApp;$('v-landing').hidden=isApp;
+    var el=h&&h!=='app'&&h!=='landing'?$(h):null;
+    if(el)el.scrollIntoView();else window.scrollTo(0,0);
+  }
+  window.addEventListener('hashchange',route);route();
+  document.querySelectorAll('[data-go]').forEach(function(b){b.addEventListener('click',function(){location.hash=b.dataset.go})});
+  // landing backdrop: slow liquid light
+  var lc=$('lbg'),lx=lc.getContext('2d'),lt=0,lreduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function lframe(){
+    lt+=.004;var w=1200,h=720;lx.fillStyle='#1a0d0a';lx.fillRect(0,0,w,h);
+    [[0,.2,'160,224,171'],[1,.55,'255,172,46'],[2,.9,'165,45,37']].forEach(function(b){
+      var x=w*b[1]+Math.sin(lt*1.2+b[0]*2)*200,y=h*.55+Math.cos(lt+b[0]*1.7)*150;
+      var r=lx.createRadialGradient(x,y,0,x,y,520);r.addColorStop(0,'rgba('+b[2]+',.95)');r.addColorStop(1,'rgba('+b[2]+',0)');
+      lx.fillStyle=r;lx.fillRect(0,0,w,h)});
+    lx.fillStyle='rgba(0,0,0,.2)';lx.fillRect(0,0,w,h);
+    if(!lreduce)requestAnimationFrame(lframe);
+  }
+  lframe();
+  // fretboard
+  var names=['E','A','D','G','B','e'],pos=[[0,5],[0,8],[1,5],[1,7],[2,5],[2,7],[3,5],[3,7],[4,5],[4,8],[5,5],[5,8]];
+  var h='';
+  for(var s=0;s<6;s++)h+='<line x1="30" x2="590" y1="'+(20+s*22)+'" y2="'+(20+s*22)+'" stroke="#000" stroke-width="'+(1+(5-s)*.25)+'"/><text x="8" y="'+(24+s*22)+'" font-size="11" fill="#6d6d6d">'+names[5-s]+'</text>';
+  for(var f=0;f<=6;f++)h+='<line y1="20" y2="130" x1="'+(30+f*93)+'" x2="'+(30+f*93)+'" stroke="#9a9a9a"/>'+(f<6?'<text x="'+(70+f*93)+'" y="146" font-size="10" fill="#6d6d6d">'+(5+f)+'</text>':'');
+  pos.forEach(function(p){h+='<circle cx="'+(30+(p[1]-5)*93+46)+'" cy="'+(20+(5-p[0])*22)+'" r="8" fill="'+(p[1]===5?'#000':'#fff')+'" stroke="#000"/>'});
+  $('fret').innerHTML=h;
+  // toggles
+  document.querySelectorAll('[data-g]').forEach(function(b){b.addEventListener('click',function(){
+    document.querySelectorAll('[data-g="'+b.dataset.g+'"]').forEach(function(x){x.classList.toggle('on',x===b)})})});
+  var sv=$('spd');sv.addEventListener('input',function(){$('spdv').textContent=sv.value});
+  // effects
+  var fxs=[['Noise gate',30,1],['Overdrive',60,1],['Amp EQ',50,1],['Chorus',35,0],['Delay',45,1],['Reverb',55,0]];
+  $('fx').innerHTML=fxs.map(function(e,i){return '<div class="r"><b>'+e[0]+'</b><input type="range" aria-label="'+e[0]+' amount" min="0" max="100" value="'+e[1]+'"><button class="pill sm'+(e[2]?' on':'')+'" aria-pressed="'+!!e[2]+'">'+(e[2]?'On':'Off')+'</button></div>'}).join('');
+  document.querySelectorAll('#fx .pill').forEach(function(b){b.addEventListener('click',function(){var on=b.classList.toggle('on');b.textContent=on?'On':'Off';b.setAttribute('aria-pressed',on)})});
+  // stage
+  var cv=$('hw'),cx=cv.getContext('2d'),W=1078,H=300,notes=[],run=false,score=0,combo=0,hit=0,tot=0,t=0,tick=0;
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // hit impact: spark burst, shockwave ring, line flash, screen shake, floating label, combo pop, pluck sound
+  var parts=[],rings=[],floats=[],flash=0,shake=0,ac=null;
+  $('go').addEventListener('click',function(e){
+    run=!run;e.target.textContent=run?'Stop':'Start';
+    if(run&&!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(x){}}
+  });
+  function ping(s,f){
+    if(!ac)return;var hz=[82.4,110,146.8,196,246.9,329.6][s]*Math.pow(2,f/12)*2,o=ac.createOscillator(),g=ac.createGain(),n=ac.currentTime;
+    o.type='triangle';o.frequency.value=hz;g.gain.setValueAtTime(.12,n);g.gain.exponentialRampToValueAtTime(.001,n+.4);
+    o.connect(g);g.connect(ac.destination);o.start();o.stop(n+.45);
+  }
+  function popEl(el){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}
+  function boom(y,c,s,f){
+    flash=1;shake=reduce?0:Math.min(9,3+c*.35);
+    var n=18+Math.min(c,20);
+    for(var i=0;i<n;i++){var a=Math.random()*6.283,v=2+Math.random()*8;parts.push({x:120,y:y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-1,l:1,r:1+Math.random()*2.5,c:Math.random()<.5?'255,255,255':'255,214,120'})}
+    rings.push({x:120,y:y,r:14,a:1});if(c%5===0)rings.push({x:120,y:y,r:30,a:1});
+    floats.push({x:140,y:y-28,a:1,t:c>0&&c%10===0?'COMBO x'+c:(c>=5?'PERFECT':'GOOD'),m:c>0&&c%10===0});
+    ping(s,f);popEl($('sc'));popEl($('cb'));
+  }
+  function miss(y){
+    for(var i=0;i<8;i++){var a=Math.random()*6.283,v=1+Math.random()*3;parts.push({x:120,y:y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:.7,r:2,c:'60,60,60'})}
+    floats.push({x:140,y:y-28,a:.8,t:'MISS',m:false,gray:true});
+  }
+  function fxDraw(){
+    cx.globalCompositeOperation='lighter';
+    if(flash>.02){var gr=cx.createLinearGradient(80,0,160,0);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.5,'rgba(255,255,255,'+flash*.6+')');gr.addColorStop(1,'rgba(255,255,255,0)');cx.fillStyle=gr;cx.fillRect(80,0,80,H);flash*=.86}
+    rings.forEach(function(r){cx.strokeStyle='rgba(255,255,255,'+r.a+')';cx.lineWidth=2;cx.beginPath();cx.arc(r.x,r.y,r.r,0,7);cx.stroke();r.r+=5;r.a-=.045});
+    parts.forEach(function(p){cx.fillStyle='rgba('+p.c+','+Math.max(p.l,0)+')';cx.beginPath();cx.arc(p.x,p.y,p.r,0,7);cx.fill();p.x+=p.vx;p.y+=p.vy;p.vy+=.18;p.vx*=.98;p.l-=.028});
+    cx.globalCompositeOperation='source-over';
+    floats.forEach(function(f){cx.globalAlpha=Math.max(f.a,0);cx.fillStyle=f.gray?'rgba(255,255,255,.7)':'#fff';cx.font=(f.m?'600 22px':'400 13px')+' Inter,sans-serif';cx.fillText(f.t,f.x,f.y);f.y-=.7;f.a-=.02;cx.globalAlpha=1});
+    parts=parts.filter(function(p){return p.l>0});rings=rings.filter(function(r){return r.a>0});floats=floats.filter(function(f){return f.a>0});
+    if(shake>.3){cv.style.transform='translate('+((Math.random()-.5)*shake)+'px,'+((Math.random()-.5)*shake)+'px)';shake*=.84}else if(cv.style.transform){cv.style.transform=''}
+  }
+  function frame(){
+    t+=.008;
+    // iridescent backdrop
+    var g=cx.createLinearGradient(0,0,W,0);g.addColorStop(0,'rgb(160,224,171)');g.addColorStop(.5,'rgb(255,172,46)');g.addColorStop(1,'rgb(165,45,37)');
+    cx.fillStyle='#1a0d0a';cx.fillRect(0,0,W,H);
+    [[0,0,'160,224,171'],[1,.5,'255,172,46'],[2,1,'165,45,37']].forEach(function(b){
+      var x=W*(b[1]*.8+.1)+Math.sin(t+b[0]*2)*140,y=H*.5+Math.cos(t*1.3+b[0])*70;
+      var r=cx.createRadialGradient(x,y,0,x,y,330);r.addColorStop(0,'rgba('+b[2]+',.95)');r.addColorStop(1,'rgba('+b[2]+',0)');
+      cx.fillStyle=r;cx.fillRect(0,0,W,H)});
+    cx.fillStyle='rgba(0,0,0,.18)';cx.fillRect(0,0,W,H);
+    for(var s=0;s<6;s++){var y=34+s*46;cx.strokeStyle='rgba(255,255,255,.4)';cx.lineWidth=1;cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();cx.fillStyle='rgba(255,255,255,.8)';cx.font='12px Inter,sans-serif';cx.fillText(names[5-s],14,y+4)}
+    cx.strokeStyle='#fff';cx.lineWidth=2;cx.beginPath();cx.moveTo(120,8);cx.lineTo(120,H-8);cx.stroke();
+    var spd=+sv.value/80;
+    if(run){tick++;if(tick%Math.round(70/spd)===0){var q=pos[Math.floor(Math.random()*pos.length)];notes.push({x:W+10,s:q[0],f:q[1]})}}
+    notes.forEach(function(n){
+      if(run)n.x-=3.2*spd;
+      var y=34+(5-n.s)*46;
+      if(!n.done&&n.x<=120&&n.x>70){n.done=1;tot++;if(Math.random()<.85){hit++;combo++;score+=100+combo*5;boom(y,combo,n.s,n.f)}else{combo=0;miss(y)}
+        $('sc').textContent=score;$('cb').textContent=combo;$('ac').textContent=Math.round(hit/tot*100)+'%'}
+      cx.globalAlpha=n.x<70?.3:1;cx.fillStyle='#fff';cx.beginPath();cx.arc(n.x,y,17,0,7);cx.fill();
+      cx.globalAlpha=n.x<70?.3:1;cx.fillStyle='#000';cx.font='600 14px Inter,sans-serif';cx.textAlign='center';cx.fillText(n.f,n.x,y+5);cx.textAlign='left';cx.globalAlpha=1;
+    });
+    notes=notes.filter(function(n){return n.x>-30});
+    fxDraw();
+    var l=run?30+Math.abs(Math.sin(t*9))*45:8;$('lvl').style.width=l+'%';$('lvlt').textContent=(-40+l*.4).toFixed(0)+' dB';
+    if(!reduce)requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
