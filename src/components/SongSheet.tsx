@@ -87,6 +87,49 @@ export default function SongSheet({ songId, variants, songKey, playHref }: { son
   const { body, bodyEasy } = variants[Math.min(which, variants.length - 1)];
   const loaded = useRef(false);
 
+  // Auto scroll: the page moves down by itself, at a speed the reader sets, until the end or until they stop it
+  const [scrolling, setScrolling] = useState(false);
+  const [speed, setSpeed] = useState(3); // 1 (slow) to 10 (fast)
+  const speedRef = useRef(speed);
+  useEffect(() => {
+    speedRef.current = speed;
+  }, [speed]);
+  useEffect(() => {
+    if (!scrolling) return;
+    let raf = 0;
+    let last = performance.now();
+    let carry = 0;
+    const stop = () => setScrolling(false);
+    const tick = (now: number) => {
+      // real elapsed time, so the speed stays the same on a slow screen; only a long pause (tab in the background) is cut short
+      const dt = Math.min(0.25, (now - last) / 1000);
+      last = now;
+      // 12 px a second at the slowest setting, 120 at the fastest; fractions are carried so slow speeds still move
+      carry += speedRef.current * 12 * dt;
+      const whole = Math.floor(carry);
+      if (whole > 0) {
+        window.scrollBy(0, whole);
+        carry -= whole;
+      }
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+        stop();
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    // touching the page or pressing a key takes control back
+    window.addEventListener("wheel", stop, { passive: true });
+    window.addEventListener("touchstart", stop, { passive: true });
+    window.addEventListener("keydown", stop);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("wheel", stop);
+      window.removeEventListener("touchstart", stop);
+      window.removeEventListener("keydown", stop);
+    };
+  }, [scrolling]);
+
   // saved choices are read after mount so the server and first client render agree
   useEffect(() => {
     const saved = load();
@@ -328,6 +371,28 @@ export default function SongSheet({ songId, variants, songKey, playHref }: { son
             </section>
           ))}
         </div>
+      </div>
+
+      {/* auto scroll controls, always within reach at the bottom of the screen */}
+      <div className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border border-[var(--line)] bg-[var(--paper)] py-2 pl-2 pr-4 shadow-lg" role="group" aria-label={t("songs.autoscroll")}>
+        <button
+          type="button"
+          onClick={() => setScrolling((v) => !v)}
+          aria-pressed={scrolling}
+          className={`flex h-10 items-center gap-2 rounded-full px-4 text-sm transition-colors ${scrolling ? "bg-[var(--ink)] text-[var(--paper)]" : "bg-[var(--hover)] hover:bg-[var(--line)]"}`}
+        >
+          <span aria-hidden="true">{scrolling ? "❚❚" : "▶"}</span>
+          {t("songs.autoscroll")}
+        </button>
+        <button type="button" aria-label="-" className="grid size-8 place-items-center rounded-full text-lg hover:bg-[var(--hover)]" onClick={() => setSpeed((v) => Math.max(1, v - 1))}>
+          −
+        </button>
+        <span className="min-w-6 text-center font-mono text-sm" title={t("songs.autoscroll.speed")}>
+          {speed}
+        </span>
+        <button type="button" aria-label="+" className="grid size-8 place-items-center rounded-full text-lg hover:bg-[var(--hover)]" onClick={() => setSpeed((v) => Math.min(10, v + 1))}>
+          +
+        </button>
       </div>
 
       {toolsOpen && (

@@ -49,6 +49,8 @@ export const SONGS_T = [
   ["fret.legend.finger", "Chord diagram key: hollow dot", ["Finger position", "ตำแหน่งนิ้วกด", "指の位置", "手指位置", "Позиция пальца", "ຕຳແໜ່ງນິ້ວກົດ", "손가락 위치", "Vị trí ngón tay"]],
   ["fret.legend.open", "Chord diagram key: ring", ["Open string", "สายเปล่า", "開放弦", "空弦", "Открытая струна", "ສາຍເປົ່າ", "개방현", "Dây buông"]],
   ["fret.legend.mute", "Chord diagram key: cross", ["Do not play this string", "ไม่ตีสายนี้", "この弦は弾かない", "不弹这根弦", "Не играть эту струну", "ບໍ່ຕີສາຍນີ້", "이 줄은 치지 않음", "Không đánh dây này"]],
+  ["songs.autoscroll", "Button: scroll the song by itself", ["Auto scroll", "เลื่อนอัตโนมัติ", "自動スクロール", "自动滚动", "Автопрокрутка", "ເລື່ອນອັດຕະໂນມັດ", "자동 스크롤", "Tự cuộn"]],
+  ["songs.autoscroll.speed", "Tooltip of the auto scroll speed number", ["Scroll speed (1 slow, 10 fast)", "ความเร็วในการเลื่อน (1 ช้า, 10 เร็ว)", "スクロール速度（1 遅い〜10 速い）", "滚动速度（1 慢，10 快）", "Скорость прокрутки (1 медленно, 10 быстро)", "ຄວາມໄວໃນການເລື່ອນ (1 ຊ້າ, 10 ໄວ)", "스크롤 속도 (1 느림, 10 빠름)", "Tốc độ cuộn (1 chậm, 10 nhanh)"]],
   ["songs.sections", "Section list label", ["Sections", "ท่อนเพลง", "セクション", "段落", "Части", "ທ່ອນເພງ", "구간", "Các đoạn"]],
   ["songs.practice", "Button: mark a song as practised", ["I practiced this song", "ฉันซ้อมเพลงนี้แล้ว", "この曲を練習した", "我练习了这首歌", "Я потренировался", "ຂ້ອຍຊ້ອມເພງນີ້ແລ້ວ", "이 노래를 연습했어요", "Tôi đã tập bài này"]],
   ["songs.practice.done", "Shown after earning song points", ["+{n} points. Nice practice.", "+{n} แต้ม ซ้อมเก่งมาก", "+{n}ポイント。いい練習でした！", "+{n} 分，练得不错！", "+{n} очков. Отличная практика!", "+{n} ແຕ້ມ ຊ້ອມເກັ່ງຫຼາຍ", "+{n}점. 연습 잘했어요!", "+{n} điểm. Tập tốt lắm!"]],

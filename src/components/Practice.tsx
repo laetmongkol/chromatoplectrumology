@@ -119,12 +119,20 @@ export default function Practice({ catalog, instrumentId, songs = [], initialSon
   const [songMode, setSongMode] = useState<SongMode>("chords");
   // True plays the chords as written; Easy uses the hand-written easy sheet, or simplifies the True chords (C13b9 -> C7, C/E -> C)
   const [chordType, setChordType] = useState<"true" | "easy">("true");
+  // move the whole song up or down in semitones (chords, shapes, targets and the solo scale all follow)
+  const [keyShift, setKeyShift] = useState(0);
   const chosen = songs.find((x) => x.slug === songSlug);
   const song = useMemo(() => {
-    if (!chosen || chordType === "true") return chosen;
-    const simple = (c: string) => formatChordLine(c, { type: "easy", notation: "written", shift: 0, flats: false });
-    return { ...chosen, steps: chosen.stepsEasy ?? chosen.steps.map((st) => ({ ...st, chord: simple(st.chord) })) };
-  }, [chosen, chordType]);
+    if (!chosen) return chosen;
+    const easy = chordType === "easy";
+    const base = easy ? (chosen.stepsEasy ?? chosen.steps) : chosen.steps;
+    // an automatic Easy version (no hand-written sheet) simplifies the True chords; shifting then uses flats if the song already does
+    const flats = chosen.steps.some((st) => /^[A-G]b/.test(st.chord));
+    const opts = { type: easy && !chosen.stepsEasy ? ("easy" as const) : ("true" as const), notation: "written" as const, shift: keyShift, flats };
+    if (!easy && keyShift === 0) return chosen;
+    const key = chosen.songKey ? formatChordLine(chosen.songKey, { ...opts, type: "true" }) : "";
+    return { ...chosen, songKey: key, steps: base.map((st) => ({ ...st, chord: formatChordLine(st.chord, opts) })) };
+  }, [chosen, chordType, keyShift]);
   const startedAtRef = useRef(0);
   const songModeRef = useRef(false);
   // set below to a function that ends the run; kept in a ref so the animation loop always calls the latest one
@@ -507,6 +515,25 @@ export default function Practice({ catalog, instrumentId, songs = [], initialSon
                     if (picked) patch({ bpm: Math.max(catalog.settings.bpmMin, Math.min(catalog.settings.bpmMax, picked.bpm)), mode: "beat" });
                   }}
                 />
+              </div>
+            )}
+            {song && (
+              <div className="f">
+                <span id="lbl-key">
+                  {t("songs.transpose")}
+                  {song.songKey ? ` (${song.songKey})` : ""}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button type="button" className="pill sm" aria-label="-" onClick={() => setKeyShift((v) => Math.max(-11, v - 1))}>
+                    −
+                  </button>
+                  <span className="min-w-8 text-center font-mono" aria-labelledby="lbl-key">
+                    {keyShift > 0 ? `+${keyShift}` : keyShift}
+                  </span>
+                  <button type="button" className="pill sm" aria-label="+" onClick={() => setKeyShift((v) => Math.min(11, v + 1))}>
+                    +
+                  </button>
+                </div>
               </div>
             )}
             {song && (

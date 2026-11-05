@@ -37,12 +37,16 @@ export async function getVariants(song: { id: number; body: string; bodyEasy: st
 /** Every published song ready for the practice room, using the sheet written for that instrument when there is one. */
 export async function listPlaySongs(instrumentId: string): Promise<SongPlay[]> {
   // the room still works for scales if the song list cannot be read
-  try {
-    return await readPlaySongs(instrumentId);
-  } catch (err) {
-    console.error("songs unavailable", err);
-    return [];
+  // the database connection sometimes times out on the first request after a pause, so try once more before giving up
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await readPlaySongs(instrumentId);
+    } catch (err) {
+      if (attempt === 1) console.error("songs unavailable", err);
+      else await new Promise((r) => setTimeout(r, 400));
+    }
   }
+  return [];
 }
 
 async function readPlaySongs(instrumentId: string): Promise<SongPlay[]> {
