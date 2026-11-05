@@ -22,6 +22,7 @@ import {
 import { firstArrivalSeconds, Game, STAGE_H, STAGE_W, type Mode } from "@/lib/game";
 import { Metronome } from "@/lib/metronome";
 import ChordBoard from "@/components/ChordBoard";
+import FretLegend from "@/components/FretLegend";
 import { formatChordLine } from "@/lib/chords";
 import { chordTargets, soloScale, type SongPlay } from "@/lib/songtime";
 import { hzToMidi, noteName, scalePositions, walkSequence } from "@/lib/music";
@@ -660,6 +661,7 @@ export default function Practice({ catalog, instrumentId, songs = [], initialSon
                 boardScale &&
                 instrument && <Fretboard scale={boardScale} instrument={instrument} target={hud.target} label={t("fret.aria", { scale: song ? song.title : t(boardScale.labelKey) })} />
               )}
+              <FretLegend chord={!!song && songMode !== "solo" && instrument?.tuning.length === 6} />
             </div>
             <div className="camcol">
               <div className="cam">{cam ? <video ref={videoRef} autoPlay muted playsInline /> : <span>{t("camera.label")}</span>}</div>
