@@ -2,8 +2,10 @@
 
 import { useT } from "@/components/I18nProvider";
 
+const SIZE = { width: 22, height: 22, minWidth: 22, maxWidth: 22, flex: "none" } as const;
+
 const dot = (cls: string, r = 7) => (
-  <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+  <svg style={SIZE} viewBox="0 0 22 22" aria-hidden="true">
     <circle className={cls} cx="11" cy="11" r={r} />
   </svg>
 );
@@ -24,7 +26,7 @@ export default function FretLegend({ chord }: { chord: boolean }) {
           {item(dot("fb-note root"), t("fret.legend.low"))}
           {item(dot("fb-note"), t("fret.legend.finger"))}
           {item(
-            <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+            <svg style={SIZE} viewBox="0 0 22 22" aria-hidden="true">
               <circle cx="11" cy="11" r="5.5" style={{ fill: "none", stroke: "var(--ink)", strokeWidth: 1.8 }} />
             </svg>,
             t("fret.legend.open"),
@@ -36,7 +38,7 @@ export default function FretLegend({ chord }: { chord: boolean }) {
           {item(dot("fb-note root"), t("fret.legend.root"))}
           {item(dot("fb-note"), t("fret.legend.note"))}
           {item(
-            <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+            <svg style={SIZE} viewBox="0 0 22 22" aria-hidden="true">
               <circle className="fb-target" cx="11" cy="11" r="9" />
             </svg>,
             t("fret.legend.target"),
