@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { practiceSong } from "@/app/play-actions";
+import ChordDiagram from "@/components/ChordDiagram";
 import { useT } from "@/components/I18nProvider";
-import { formatChordLine, parseChart, prefersFlats, rowSegments, type ChordType, type Notation } from "@/lib/chords";
+import { formatChordLine, isChordToken, parseChart, prefersFlats, rowSegments, type ChordType, type Notation } from "@/lib/chords";
 
 type Layout = "full" | "compact" | "two";
 
@@ -133,6 +134,21 @@ export default function SongSheet({ songId, variants, songKey, playHref }: { son
 
   const fmt = (tok: string) => formatChordLine(tok, { type: handEasy ? "true" : tools.type, notation: tools.notation, shift: tools.shift, flats });
   const compact = tools.layout === "compact";
+  // every different chord of the song, in the order it first appears, spelled the way the sheet below shows it
+  const used = useMemo(() => {
+    const seen = new Set<string>();
+    for (const sec of sections) {
+      for (const row of sec.rows) {
+        if (row.chords === null) continue;
+        for (const tk of row.chords.split(/\s+/)) {
+          const bare = tk.replace(/^\|+|\|+$/g, "");
+          if (bare && isChordToken(bare)) seen.add(fmt(bare));
+        }
+      }
+    }
+    return [...seen];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sections, tools.type, tools.notation, tools.shift, flats, handEasy]);
 
   const practice = async () => {
     const now = new Date();
@@ -262,6 +278,16 @@ export default function SongSheet({ songId, variants, songKey, playHref }: { son
           )}
         </div>
 
+        {tools.type !== "lyrics" && used.length > 0 && (
+          <section className="mb-4 rounded-2xl border border-[var(--line)] p-6">
+            <h2 className="mb-4 mt-0 inline-block rounded-full bg-[var(--hover)] px-3 py-1 font-mono text-[11px] font-normal uppercase tracking-wide text-[var(--muted)]">{t("songs.chords")}</h2>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-x-3 gap-y-5">
+              {used.map((c) => (
+                <ChordDiagram key={c} chord={c} />
+              ))}
+            </div>
+          </section>
+        )}
         <div className={`grid gap-4 ${tools.layout === "two" ? "md:grid-cols-2" : ""}`} style={{ fontSize: tools.size }}>
           {sections.map((s, i) => (
             <section
