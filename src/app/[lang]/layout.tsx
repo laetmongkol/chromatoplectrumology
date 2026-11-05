@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import { I18nProvider } from "@/components/I18nProvider";
+import SiteNav from "@/components/SiteNav";
 import { getEnabledLanguages, getI18n, LEGACY_PAGES, preferredSlug } from "@/lib/i18n";
 
 type Params = Promise<{ lang: string }>;
@@ -38,6 +39,7 @@ async function Gate({ params, children }: { params: Params; children: ReactNode 
         <link key={l.code} rel="alternate" hrefLang={l.code} href={`/${l.slug}`} />
       ))}
       <I18nProvider locale={i18n.locale} slug={i18n.slug} dir={i18n.dir} messages={i18n.messages}>
+        <SiteNav i18n={i18n} />
         {children}
       </I18nProvider>
     </>

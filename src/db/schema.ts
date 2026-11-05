@@ -1,7 +1,7 @@
 // Database schema. Everything the UI shows or the lessons use lives here, so the admin page can change it.
 // Keep imports relative-free (only drizzle) so scripts can load this file directly with Node.
 
-import { boolean, integer, jsonb, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgTable, primaryKey, serial, text, timestamp, unique } from "drizzle-orm/pg-core";
 
 // ---------- i18n ----------
 
@@ -143,3 +143,95 @@ export const verification = pgTable("verification", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
+
+// ---------- practice history and preferences ----------
+
+/** One finished practice run, saved when a signed-in player stops. Numbers come from the browser, so the server checks their range. */
+export const plays = pgTable(
+  "plays",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    instrumentId: text("instrument_id").notNull(),
+    scaleId: text("scale_id").notNull(),
+    mode: text("mode").notNull(), // "beat" | "free"
+    bpm: integer("bpm").notNull(),
+    score: integer("score").notNull(),
+    bestCombo: integer("best_combo").notNull(),
+    accuracy: integer("accuracy").notNull(), // 0-100
+    hits: integer("hits").notNull(),
+    total: integer("total").notNull(),
+    seconds: integer("seconds").notNull(),
+    /** The player's local calendar day (YYYY-MM-DD), so streaks follow their own midnight, not the server's. */
+    day: text("day").notNull().default(""),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("plays_user_idx").on(t.userId, t.createdAt), index("plays_board_idx").on(t.instrumentId, t.scaleId, t.score)],
+);
+
+export const userPrefs = pgTable("user_prefs", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  /** Minutes of practice the player wants each day. */
+  dailyGoalMin: integer("daily_goal_min").notNull().default(15),
+  /** Whether the player's name appears on the leaderboard. */
+  showOnBoard: boolean("show_on_board").notNull().default(true),
+});
+
+// ---------- songs (chord sheets) and points ----------
+
+/** Chord sheets an admin pastes in. `body` is plain text: section titles, chord lines (bars and chords) and lyric lines. */
+export const songs = pgTable("songs", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  artist: text("artist").notNull().default(""),
+  /** Original key, shown on the sheet, e.g. "Bb" */
+  songKey: text("song_key").notNull().default(""),
+  bpm: integer("bpm"),
+  /** Beats in each bar (the top number of the time signature). A bar with one chord holds it for all of them; two chords share it. */
+  beatsPerBar: integer("beats_per_bar").notNull().default(4),
+  body: text("body").notNull().default(""),
+  /** Optional hand-written easy version of the same song. When empty, easy chords are made from `body` automatically. */
+  bodyEasy: text("body_easy").notNull().default(""),
+  published: boolean("published").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+/** Every point a player earns, one row each, so the total can always be explained. */
+export const pointEvents = pgTable(
+  "point_events",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(), // "run" | "song"
+    /** What the points are for: a play id for runs, a song id for songs */
+    refId: integer("ref_id").notNull(),
+    points: integer("points").notNull(),
+    /** Player's local day, so "once per song per day" follows their own midnight */
+    day: text("day").notNull().default(""),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("points_user_idx").on(t.userId, t.kind, t.refId, t.day)],
+);
+
+/** A different chord sheet of a song for one instrument (guitar chords, bass line, keys ...). The song's own `body` is the default for every instrument without its own sheet. */
+export const songSheets = pgTable(
+  "song_sheets",
+  {
+    id: serial("id").primaryKey(),
+    songId: integer("song_id")
+      .notNull()
+      .references(() => songs.id, { onDelete: "cascade" }),
+    instrumentId: text("instrument_id").notNull(),
+    body: text("body").notNull().default(""),
+    bodyEasy: text("body_easy").notNull().default(""),
+  },
+  (t) => [unique("song_sheets_song_instrument").on(t.songId, t.instrumentId)],
+);

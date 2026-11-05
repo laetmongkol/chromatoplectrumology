@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import AuthNav, { authLabels } from "@/components/AuthNav";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { getCatalog } from "@/lib/catalog";
 import { getI18n } from "@/lib/i18n";
+import { listPlaySongs } from "@/lib/songs";
 import PracticeLoader from "./PracticeLoader";
 
 type Params = Promise<{ lang: string; instrument: string }>;
@@ -28,18 +27,11 @@ async function PracticeContent({ params }: { params: Params }) {
   if (!i18n) notFound();
   const chosen = catalog.instruments.find((i) => i.id === instrument);
   if (!chosen || !chosen.available) notFound();
+  // songs for the picker in the practice room, using the sheet written for this instrument when there is one
+  const songs = await listPlaySongs(chosen.id);
   return (
     <main>
-      <PracticeLoader
-        catalog={catalog}
-        instrumentId={chosen.id}
-        authSlot={
-          <Suspense fallback={null}>
-            <AuthNav labels={authLabels(i18n.t)} slug={i18n.slug} />
-          </Suspense>
-        }
-        langSlot={<LanguageSwitcher languages={i18n.languages} tone="light" />}
-      />
+      <PracticeLoader catalog={catalog} instrumentId={chosen.id} songs={songs} />
     </main>
   );
 }

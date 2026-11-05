@@ -30,7 +30,7 @@ async function HowContent({ params }: { params: Promise<{ lang: string }> }) {
   return (
     <main>
       <SmoothScroll />
-      <PageHero i18n={i18n} title={t("nav.how")} lead={t("how.lead")} />
+      <PageHero title={t("nav.how")} lead={t("how.lead")} />
 
       <div className="mx-auto max-w-5xl px-5">
         {steps.map((s, i) => (

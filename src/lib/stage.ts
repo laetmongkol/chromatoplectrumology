@@ -250,7 +250,7 @@ export class StageRenderer {
     cx.fillStyle = p.noteText;
     cx.font = "600 14px Inter, sans-serif";
     cx.textAlign = "center";
-    cx.fillText(showNames ? pitchClassName(n.midi) : String(n.fret), n.x, y + 5);
+    cx.fillText(n.label ?? (showNames ? pitchClassName(n.midi) : String(n.fret)), n.x, y + 5);
     cx.textAlign = "left";
     cx.globalAlpha = 1;
   }

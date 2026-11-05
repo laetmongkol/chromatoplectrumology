@@ -1,13 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import Brand from "@/components/Brand";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { savePlay } from "@/app/play-actions";
 import Fretboard from "@/components/Fretboard";
 import Collapsible from "@/components/Collapsible";
 import Dropdown from "@/components/Dropdown";
-import { useLocalePath, useT } from "@/components/I18nProvider";
-import ThemeToggle from "@/components/ThemeToggle";
+import { useT } from "@/components/I18nProvider";
 import Toggle, { HeadphonesIcon, MetronomeIcon, NoteNamesIcon } from "@/components/Toggle";
 import type { Catalog } from "@/lib/catalog";
 import {
@@ -23,6 +21,9 @@ import {
 } from "@/lib/engine";
 import { firstArrivalSeconds, Game, STAGE_H, STAGE_W, type Mode } from "@/lib/game";
 import { Metronome } from "@/lib/metronome";
+import ChordBoard from "@/components/ChordBoard";
+import { formatChordLine } from "@/lib/chords";
+import { chordTargets, soloScale, type SongPlay } from "@/lib/songtime";
 import { hzToMidi, noteName, scalePositions, walkSequence } from "@/lib/music";
 import { StageRenderer, type StageLabels } from "@/lib/stage";
 import { resolveTheme } from "@/lib/theme";
@@ -94,18 +95,39 @@ interface Hud {
   cents: number | null;
   db: number;
   target: string;
+  /** Notes judged so far (hit or missed), used to show which chord is next in a song */
+  judged: number;
+  /** Beat the song is at (0 = first beat on the hit line) */
+  beat: number;
 }
 
 const NO_STRINGS: string[] = [];
-const HUD0: Hud = { score: 0, combo: 0, acc: null, hear: "–", cents: null, db: -Infinity, target: "" };
+const HUD0: Hud = { score: 0, combo: 0, acc: null, hear: "–", cents: null, db: -Infinity, target: "", judged: 0, beat: -8 };
 
-export default function Practice({ catalog, instrumentId, authSlot, langSlot }: { catalog: Catalog; instrumentId: string; authSlot: ReactNode; langSlot: ReactNode }) {
+type SongMode = "chords" | "roots" | "solo";
+
+export default function Practice({ catalog, instrumentId, songs = [], initialSongSlug }: { catalog: Catalog; instrumentId: string; songs?: SongPlay[]; initialSongSlug?: string }) {
   const t = useT();
-  const path = useLocalePath();
   const [s, setS] = useState<Settings>(() => loadSettings(catalog));
   const [devices, setDevices] = useState<DeviceLists>({ inputs: [], outputs: [] });
   const [engineOn, setEngineOn] = useState(false);
   const [running, setRunning] = useState(false);
+  const [saveMsg, setSaveMsg] = useState("");
+  // what is being practised: a scale (no song chosen) or a song, played as strummed chords, root notes, or a solo over the chords
+  const [songSlug, setSongSlug] = useState(() => (songs.some((x) => x.slug === initialSongSlug) ? (initialSongSlug as string) : ""));
+  const [songMode, setSongMode] = useState<SongMode>("chords");
+  // True plays the chords as written; Easy uses the hand-written easy sheet, or simplifies the True chords (C13b9 -> C7, C/E -> C)
+  const [chordType, setChordType] = useState<"true" | "easy">("true");
+  const chosen = songs.find((x) => x.slug === songSlug);
+  const song = useMemo(() => {
+    if (!chosen || chordType === "true") return chosen;
+    const simple = (c: string) => formatChordLine(c, { type: "easy", notation: "written", shift: 0, flats: false });
+    return { ...chosen, steps: chosen.stepsEasy ?? chosen.steps.map((st) => ({ ...st, chord: simple(st.chord) })) };
+  }, [chosen, chordType]);
+  const startedAtRef = useRef(0);
+  const songModeRef = useRef(false);
+  // set below to a function that ends the run; kept in a ref so the animation loop always calls the latest one
+  const finishRef = useRef<() => void>(() => {});
   const [error, setError] = useState<string | null>(null);
   const [hud, setHud] = useState<Hud>(HUD0);
   const [tuner, setTuner] = useState(false);
@@ -134,6 +156,15 @@ export default function Practice({ catalog, instrumentId, authSlot, langSlot }: 
   const scale = scaleList.find((x) => x.id === s.scaleId) ?? scaleList[0];
   const positions = useMemo(() => (scale && instrument ? scalePositions(scale, instrument) : []), [scale, instrument]);
   const stringNames = instrument?.stringNames ?? NO_STRINGS;
+  const soloPreset = useMemo(() => (song && instrument ? soloScale(song.songKey, instrument.tuning, scale) : undefined), [song, instrument, scale]);
+  const soloPositions = useMemo(() => (soloPreset && instrument ? scalePositions(soloPreset, instrument) : []), [soloPreset, instrument]);
+  // the scale fretboard shows the lesson scale, or the song's key when soloing
+  const boardScale = song && songMode === "solo" ? soloPreset : scale;
+  // listen for pitches down to a little below the lowest open string (bass needs a lower floor than guitar)
+  const lowestMidi = instrument && instrument.tuning.length > 0 ? Math.min(...instrument.tuning) : 40;
+  useEffect(() => {
+    engineRef.current.setPitchRange(Math.max(25, 440 * 2 ** ((lowestMidi - 69) / 12) * 0.85));
+  }, [lowestMidi]);
 
   const describeError = useCallback(
     (err: unknown): string => {
@@ -165,10 +196,28 @@ export default function Practice({ catalog, instrumentId, authSlot, langSlot }: 
     }
   }, [s]);
 
+  useEffect(() => {
+    songModeRef.current = !!song && songMode === "chords";
+  }, [song, songMode]);
+
   // push lesson settings into the game
   useEffect(() => {
-    gameRef.current.setSequence(walkSequence(positions));
-  }, [positions]);
+    const g = gameRef.current;
+    g.endAtBeat = null;
+    if (song && instrument && songMode !== "solo") {
+      // a song plays through once, in its own rhythm: a strum (or just the root note) for each chord
+      g.loop = false;
+      g.setSequence(chordTargets(song.steps, instrument.tuning, songMode === "chords"));
+    } else if (song && instrument) {
+      // solo: scale notes in the song's key, one a beat, until the song ends
+      g.loop = true;
+      g.endAtBeat = song.totalBeats;
+      g.setSequence(walkSequence(soloPositions));
+    } else {
+      g.loop = true;
+      g.setSequence(walkSequence(positions));
+    }
+  }, [positions, song, songMode, instrument, soloPositions]);
   useEffect(() => {
     gameRef.current.bpm = s.bpm;
     gameRef.current.mode = s.mode;
@@ -222,7 +271,7 @@ export default function Practice({ catalog, instrumentId, authSlot, langSlot }: 
       const smp = e.sample();
       const heard = smp && smp.hz ? { midi: hzToMidi(smp.hz), clarity: smp.clarity } : null;
       heardMidi = heard ? heard.midi : null;
-      const events = g.update(dt, heard);
+      const events = g.update(dt, heard, songModeRef.current && g.running ? e.chroma() : null);
       if (events.length) {
         renderer.handle(events);
         if (events.some((x) => x.type === "hit")) {
@@ -231,6 +280,7 @@ export default function Practice({ catalog, instrumentId, authSlot, langSlot }: 
         }
       }
       renderer.draw(g, showNamesRef.current);
+      if (g.running && g.done) finishRef.current();
       if (lvlRef.current) {
         const db = smp ? smp.db : -Infinity;
         lvlRef.current.style.width = `${Math.max(0, Math.min(100, ((db + 60) / 60) * 100))}%`;
@@ -247,6 +297,8 @@ export default function Practice({ catalog, instrumentId, authSlot, langSlot }: 
           cents: heardMidi === null ? null : Math.round((heardMidi - Math.round(heardMidi)) * 100),
           db: smp ? smp.db : -Infinity,
           target: tgt ? `${tgt.string}:${tgt.fret}` : "",
+          judged: g.total,
+          beat: g.songBeat,
         });
       }
       raf = requestAnimationFrame(loop);
@@ -291,15 +343,41 @@ export default function Practice({ catalog, instrumentId, authSlot, langSlot }: 
     return engineRef.current.running;
   }, [s, startEngine]);
 
+  // Ends the run and keeps it: the server saves it for a signed-in player and says so otherwise.
+  useEffect(() => {
+    finishRef.current = () => {
+      const g = gameRef.current;
+      g.running = false;
+      setRunning(false);
+      const now = new Date();
+      const day = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      void savePlay({
+        instrumentId,
+        scaleId: song ? `song:${song.slug}:${songMode}` : s.scaleId,
+        mode: s.mode,
+        bpm: s.bpm,
+        score: g.score,
+        bestCombo: g.best,
+        hits: g.hits,
+        total: g.total,
+        seconds: Math.round((Date.now() - startedAtRef.current) / 1000),
+        day,
+      })
+        .then((r) => setSaveMsg(r.ok ? t("play.points", { score: r.score, pts: r.points }) : r.reason === "login" ? t("play.login") : r.reason === "short" ? t("play.short") : ""))
+        .catch(() => setSaveMsg(""));
+    };
+  });
+
   const onStart = async () => {
     if (!(await ensureEngine())) return;
     const g = gameRef.current;
     if (g.running) {
-      g.running = false;
-      setRunning(false);
+      finishRef.current();
     } else {
       g.reset();
       g.running = true;
+      startedAtRef.current = Date.now();
+      setSaveMsg("");
       setRunning(true);
     }
   };
@@ -369,20 +447,6 @@ export default function Practice({ catalog, instrumentId, authSlot, langSlot }: 
 
   return (
     <>
-      <div className="navbar">
-        <div className="wrap">
-          <header className="top flat">
-            <span className="logo">
-              <Brand name={t("site.name")} />
-            </span>
-            <Link href={path("/app")}>{t("app.instrument.title")}</Link>
-            {authSlot}
-            <Link href={path("/")}>{t("nav.site")}</Link>
-            {langSlot}
-            <ThemeToggle />
-          </header>
-        </div>
-      </div>
       <div className="wrap">
         <h1 className="app-h1" style={{ whiteSpace: "pre-line" }}>
           {t("app.title")}
@@ -428,10 +492,56 @@ export default function Practice({ catalog, instrumentId, authSlot, langSlot }: 
 
         <Collapsible id="lesson" title={t("lesson.title")} open={isOpen("lesson")} onToggle={() => toggleSec("lesson")}>
           <div className="row">
-            <div className="f">
-              <span id="lbl-scale">{t("lesson.scale")}</span>
-              <Dropdown labelledBy="lbl-scale" value={scale?.id ?? ""} options={scaleDd} onChange={(v) => patch({ scaleId: v })} />
-            </div>
+            {songs.length > 0 && (
+              <div className="f">
+                <span id="lbl-song">{t("practice.what")}</span>
+                <Dropdown
+                  labelledBy="lbl-song"
+                  value={songSlug}
+                  options={[{ value: "", label: t("practice.scale") }, ...songs.map((x) => ({ value: x.slug, label: x.title }))]}
+                  onChange={(v) => {
+                    setSongSlug(v);
+                    const picked = songs.find((x) => x.slug === v);
+                    // the song brings its own speed
+                    if (picked) patch({ bpm: Math.max(catalog.settings.bpmMin, Math.min(catalog.settings.bpmMax, picked.bpm)), mode: "beat" });
+                  }}
+                />
+              </div>
+            )}
+            {song && (
+              <div className="f">
+                <span id="lbl-type">{t("songs.chordType")}</span>
+                <Dropdown
+                  labelledBy="lbl-type"
+                  value={chordType}
+                  options={[
+                    { value: "true", label: t("songs.type.true") },
+                    { value: "easy", label: t("songs.type.easy") },
+                  ]}
+                  onChange={(v) => setChordType(v === "easy" ? "easy" : "true")}
+                />
+              </div>
+            )}
+            {song ? (
+              <div className="f">
+                <span id="lbl-mode">{t("practice.how")}</span>
+                <Dropdown
+                  labelledBy="lbl-mode"
+                  value={songMode}
+                  options={[
+                    { value: "chords", label: t("practice.mode.chords") },
+                    { value: "roots", label: t("practice.mode.roots") },
+                    { value: "solo", label: t("practice.mode.solo") },
+                  ]}
+                  onChange={(v) => setSongMode(v as SongMode)}
+                />
+              </div>
+            ) : (
+              <div className="f">
+                <span id="lbl-scale">{t("lesson.scale")}</span>
+                <Dropdown labelledBy="lbl-scale" value={scale?.id ?? ""} options={scaleDd} onChange={(v) => patch({ scaleId: v })} />
+              </div>
+            )}
             <label className="f" htmlFor="spd">
               {t("lesson.speed", { bpm: s.bpm })}
               <input
@@ -466,6 +576,11 @@ export default function Practice({ catalog, instrumentId, authSlot, langSlot }: 
         </div>
       </div>
 
+      {song && (
+        <div className="wrap">
+          <SongStrip song={song} beat={hud.beat} running={running} mode={songMode} />
+        </div>
+      )}
       <div className="stage">
         <div className="in">
           <canvas ref={canvasRef} width={STAGE_W} height={STAGE_H} aria-label={t("stage.aria")} />
@@ -496,6 +611,11 @@ export default function Practice({ catalog, instrumentId, authSlot, langSlot }: 
                 {tuner ? t("stage.closeTuner") : t("stage.tune")}
               </button>
             </div>
+            {saveMsg && (
+              <p className="note" role="status" style={{ margin: "10px 0 0" }}>
+                {saveMsg}
+              </p>
+            )}
           </aside>
         </div>
       </div>
@@ -530,7 +650,16 @@ export default function Practice({ catalog, instrumentId, authSlot, langSlot }: 
         <Collapsible id="fret" title={t("fret.title")} hint={t("fret.hint")} open={isOpen("fret")} onToggle={() => toggleSec("fret")}>
           <div className="two">
             <div className="fretwrap">
-              {scale && instrument && <Fretboard scale={scale} instrument={instrument} target={hud.target} label={t("fret.aria", { scale: t(scale.labelKey) })} />}
+              {song && songMode !== "solo" && instrument?.tuning.length === 6 ? (
+                (() => {
+                  const cur = currentStep(song, hud.beat);
+                  const nxt = song.steps[cur.index + 1];
+                  return <ChordBoard chord={cur.step.chord} next={nxt?.chord} label={cur.step.chord} />;
+                })()
+              ) : (
+                boardScale &&
+                instrument && <Fretboard scale={boardScale} instrument={instrument} target={hud.target} label={t("fret.aria", { scale: song ? song.title : t(boardScale.labelKey) })} />
+              )}
             </div>
             <div className="camcol">
               <div className="cam">{cam ? <video ref={videoRef} autoPlay muted playsInline /> : <span>{t("camera.label")}</span>}</div>
@@ -574,5 +703,47 @@ export default function Practice({ catalog, instrumentId, authSlot, langSlot }: 
         </footer>
       </div>
     </>
+  );
+}
+
+/** The song step that is current at this beat (the last one that has started). */
+function currentStep(song: SongPlay, beat: number): { step: SongPlay["steps"][number]; index: number } {
+  let index = 0;
+  for (let i = 0; i < song.steps.length; i++) {
+    if (song.steps[i].at <= beat + 0.25) index = i;
+    else break;
+  }
+  return { step: song.steps[index], index };
+}
+
+/** The chord to play now and the ones coming up, with the lyric line they sit above. Shown only when playing a song. */
+function SongStrip({ song, beat, running, mode }: { song: SongPlay; beat: number; running: boolean; mode: SongMode }) {
+  const t = useT();
+  const finished = beat >= song.totalBeats;
+  const { step: now, index } = currentStep(song, beat);
+  const upcoming = song.steps.slice(index + 1, index + 5);
+  const bar = Math.max(0, Math.floor(beat / song.beatsPerBar)) + 1;
+  const bars = Math.round(song.totalBeats / song.beatsPerBar);
+  return (
+    <section className="mb-6 rounded-2xl border border-[var(--line)] p-5" aria-live="off">
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+        <div>
+          <p className="m-0 font-mono text-xs uppercase text-[var(--muted)]">{finished ? t("songs.finished") : running ? t("songs.now") : song.title}</p>
+          <p className="m-0 text-5xl font-light leading-none">{finished ? "✓" : (now?.chord ?? "")}</p>
+        </div>
+        <div className="flex gap-3 font-mono text-lg text-[var(--muted)]" aria-hidden="true">
+          {upcoming.map((st, i) => (
+            <span key={`${index}-${i}`}>{st.chord}</span>
+          ))}
+        </div>
+        {running && !finished && (
+          <p className="m-0 ml-auto font-mono text-xs text-[var(--muted)]">
+            {t("songs.bar", { n: Math.min(bar, bars), total: bars })}
+          </p>
+        )}
+      </div>
+      {!finished && now?.lyric && <p className="mb-0 mt-3 text-[var(--muted)]">{now.lyric}</p>}
+      {!running && !finished && <p className="mb-0 mt-3 text-sm text-[var(--muted)]">{mode === "chords" ? t("songs.strum.hint") : mode === "roots" ? t("songs.roots.hint") : t("songs.solo.hint")}</p>}
+    </section>
   );
 }

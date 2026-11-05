@@ -5,7 +5,6 @@ import { Suspense } from "react";
 import LiquidBackdrop from "@/components/LiquidBackdrop";
 import RiseText from "@/components/RiseText";
 import ScrollSteps from "@/components/ScrollSteps";
-import SiteNav from "@/components/SiteNav";
 import SmoothScroll from "@/components/SmoothScroll";
 import { getCatalog } from "@/lib/catalog";
 import { getI18n } from "@/lib/i18n";
@@ -43,7 +42,6 @@ async function LandingContent({ params }: { params: Promise<{ lang: string }> })
 
       <header className="L-hero">
         <LiquidBackdrop />
-        <SiteNav i18n={i18n} />
         <div className="L-title">
           <h1>
             <RiseText text={t("landing.hero.title")} />
@@ -175,6 +173,10 @@ async function LandingContent({ params }: { params: Promise<{ lang: string }> })
 
       <div className="wrap">
         <div className="L-foot">
+          <div>
+            <b>{t("nav.leaderboard")}</b>
+            <Link href={`/${slug}/leaderboard`}>{t("board.title")}</Link>
+          </div>
           <div>
             <b>{t("landing.foot.browser.title")}</b>
             {t("landing.foot.browser.body")}

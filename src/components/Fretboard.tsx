@@ -21,7 +21,7 @@ export default function Fretboard({ scale, instrument, target, label }: { scale:
   const midY = (boardTop + boardBottom) / 2;
 
   return (
-    <svg viewBox="0 0 600 236" role="img" aria-label={label}>
+    <svg viewBox={`0 0 600 ${boardBottom + 32}`} role="img" aria-label={label}>
       <rect className="fb-board" x={LEFT} y={boardTop} width={COLS * COL_W} height={boardBottom - boardTop} />
 
       {/* inlay dots, one per fret column that has them */}

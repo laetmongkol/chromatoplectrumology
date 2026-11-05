@@ -29,6 +29,12 @@ export interface Pos {
   fret: number;
   midi: number;
   root: boolean;
+  /** Set for a chord target: the pitch classes (root, third, fifth) that must sound together */
+  /** Beat (from the start of a song) at which this target should be hit; unset for scale practice, which just repeats on every beat */
+  at?: number;
+  pcs?: number[];
+  /** Text shown on the note instead of the fret number, e.g. the chord name */
+  label?: string;
 }
 
 /** Frets covered by one scale position. */

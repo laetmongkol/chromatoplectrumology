@@ -3,6 +3,8 @@
 import { useSyncExternalStore } from "react";
 
 export type Theme = "light" | "dark";
+/** What the visitor picked: a fixed theme, or "system" to follow the device (the default). */
+export type ThemePref = Theme | "system";
 
 const STORAGE_KEY = "theme";
 const QUERY = "(prefers-color-scheme: dark)";
@@ -29,10 +31,22 @@ export function useTheme(): Theme {
   return useSyncExternalStore(subscribe, resolveTheme, () => "light");
 }
 
-export function setTheme(theme: Theme) {
-  document.documentElement.dataset.theme = theme;
+export function getThemePref(): ThemePref {
+  const chosen = document.documentElement.dataset.theme;
+  return chosen === "dark" || chosen === "light" ? chosen : "system";
+}
+
+export function useThemePref(): ThemePref {
+  return useSyncExternalStore(subscribe, getThemePref, () => "system");
+}
+
+/** "system" removes the fixed choice, so the page follows the device's light/dark setting again (and when it changes). */
+export function setTheme(pref: ThemePref) {
+  if (pref === "system") delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = pref;
   try {
-    localStorage.setItem(STORAGE_KEY, theme);
+    if (pref === "system") localStorage.removeItem(STORAGE_KEY);
+    else localStorage.setItem(STORAGE_KEY, pref);
   } catch {
     /* storage blocked: the choice lasts for this visit only */
   }

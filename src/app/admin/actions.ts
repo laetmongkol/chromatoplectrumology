@@ -2,7 +2,7 @@
 
 import { and, eq, ne } from "drizzle-orm";
 import { revalidatePath, updateTag } from "next/cache";
-import { db, appSettings, effects, instruments, languages, media, scales, translationKeys, translations } from "@/db";
+import { db, appSettings, effects, instruments, languages, media, scales, songSheets, songs, translationKeys, translations } from "@/db";
 import { requireAdmin } from "@/lib/admin";
 import { CATALOG_TAG } from "@/lib/catalog";
 import { I18N_TAG, RESERVED_SLUGS } from "@/lib/i18n";
@@ -270,4 +270,61 @@ export async function saveSetting(f: FormData) {
   await db.update(appSettings).set({ value }).where(eq(appSettings.key, key));
   refreshCatalog();
   refreshI18n();
+}
+
+// ---------- songs (master) ----------
+
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+
+const clean = (v: FormDataEntryValue | null) => String(v ?? "").replace(/\r\n?/g, "\n").slice(0, 20000);
+
+/** Creates a song (no id) or updates one. Pasted text is stored as is: the viewer reads chord lines and lyric lines from it. */
+export async function saveSong(f: FormData) {
+  await requireAdmin();
+  const id = int(f, "id", 0);
+  const title = text(f, "title").slice(0, 120);
+  if (!title) return;
+  const slug = slugify(text(f, "slug")) || slugify(title) || `song-${Date.now().toString(36)}`;
+  const values = {
+    slug,
+    title,
+    artist: text(f, "artist").slice(0, 120),
+    songKey: text(f, "songKey").slice(0, 8),
+    bpm: int(f, "bpm", 0) > 0 ? Math.min(300, int(f, "bpm")) : null,
+    body: String(f.get("body") ?? "").replace(/\r\n?/g, "\n").slice(0, 20000),
+    bodyEasy: String(f.get("bodyEasy") ?? "").replace(/\r\n?/g, "\n").slice(0, 20000),
+    beatsPerBar: Math.max(1, Math.min(12, int(f, "beatsPerBar", 4))),
+    published: f.get("published") === "on",
+    updatedAt: new Date(),
+  };
+  let songId = id;
+  if (id > 0) await db.update(songs).set(values).where(eq(songs.id, id));
+  else {
+    const [created] = await db.insert(songs).values(values).onConflictDoNothing().returning({ id: songs.id });
+    songId = created?.id ?? 0;
+  }
+  // sheets written for one instrument (field names sheet_<instrument> and sheetEasy_<instrument>); an empty pair removes that sheet
+  if (songId > 0) {
+    for (const [key] of f.entries()) {
+      const m = /^sheet_([a-z0-9-]+)$/.exec(key);
+      if (!m) continue;
+      const instrumentId = m[1];
+      const body = clean(f.get(key));
+      const bodyEasy = clean(f.get(`sheetEasy_${instrumentId}`));
+      if (body.trim() === "" && bodyEasy.trim() === "") await db.delete(songSheets).where(and(eq(songSheets.songId, songId), eq(songSheets.instrumentId, instrumentId)));
+      else await db.insert(songSheets).values({ songId, instrumentId, body, bodyEasy }).onConflictDoUpdate({ target: [songSheets.songId, songSheets.instrumentId], set: { body, bodyEasy } });
+    }
+  }
+  revalidatePath("/", "layout");
+}
+
+export async function deleteSong(f: FormData) {
+  await requireAdmin();
+  await db.delete(songs).where(eq(songs.id, int(f, "id", 0)));
+  revalidatePath("/", "layout");
 }

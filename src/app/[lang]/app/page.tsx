@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import RiseText from "@/components/RiseText";
-import SiteNav from "@/components/SiteNav";
 import { getCatalog } from "@/lib/catalog";
 import { getI18n } from "@/lib/i18n";
 
@@ -31,7 +30,6 @@ async function PickerContent({ params }: { params: Params }) {
 
   return (
     <main className="pick">
-      <SiteNav i18n={i18n} />
 
       <div className="pick-head">
         <h1>

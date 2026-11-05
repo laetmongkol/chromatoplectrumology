@@ -35,6 +35,7 @@ async function Guard({ children }: { children: ReactNode }) {
         <Link href="/admin/languages">Languages</Link>
         <Link href="/admin/translations">Translations</Link>
         <Link href="/admin/catalog">Catalog</Link>
+        <Link href="/admin/songs">Songs</Link>
         <Link href="/app">App</Link>
       </header>
       {children}

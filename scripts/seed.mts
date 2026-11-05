@@ -9,6 +9,9 @@ import * as s from "../src/db/schema.ts";
 import { LANGUAGES } from "./seed-data/languages.mts";
 import { COLS, SITE } from "./seed-data/site.mts";
 import { LANDING } from "./seed-data/landing.mts";
+import { ME } from "./seed-data/me.mts";
+import { BASS_NAMES, BASS_SCALES } from "./seed-data/bass.mts";
+import { SONGS_T } from "./seed-data/songs.mts";
 import { APP, EFFECTS, INSTRUMENTS, SCALES, SETTINGS } from "./seed-data/app.mts";
 
 const url = process.env.DATABASE_URL;
@@ -34,7 +37,7 @@ async function main() {
     end $$`,
   );
 
-  const rows = [...SITE, ...LANDING, ...APP] as [string, string, string[]][];
+  const rows = [...SITE, ...LANDING, ...ME, ...BASS_NAMES, ...SONGS_T, ...APP] as [string, string, string[]][];
   await db
     .insert(s.translationKeys)
     .values(rows.map(([key, description]) => ({ key, namespace: key.split(".")[0], description })))
@@ -54,7 +57,7 @@ async function main() {
   for (const i of INSTRUMENTS) {
     await db.execute(sql`update instruments set image = ${i.image}, image_credit = ${i.imageCredit} where id = ${i.id} and image is null`);
   }
-  await db.insert(s.scales).values(SCALES).onConflictDoNothing();
+  await db.insert(s.scales).values([...SCALES, ...BASS_SCALES]).onConflictDoNothing();
   await db.insert(s.effects).values(EFFECTS).onConflictDoNothing();
   await db.insert(s.appSettings).values(SETTINGS).onConflictDoNothing();
 

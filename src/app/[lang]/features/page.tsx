@@ -25,7 +25,7 @@ async function FeaturesContent({ params }: { params: Promise<{ lang: string }> }
   return (
     <main>
       <SmoothScroll />
-      <PageHero i18n={i18n} title={t("features.title")} lead={t("features.lead")} />
+      <PageHero title={t("features.title")} lead={t("features.lead")} />
 
       <div className="mx-auto max-w-6xl px-5 py-16">
         <ul className="m-0 grid list-none gap-5 p-0 sm:grid-cols-2 lg:grid-cols-3">

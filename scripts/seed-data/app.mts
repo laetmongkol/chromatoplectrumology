@@ -111,7 +111,7 @@ export const APP = [
 
 export const INSTRUMENTS = [
   { id: "guitar", labelKey: "instrument.guitar", available: true, tuning: [40, 45, 50, 55, 59, 64], stringNames: ["E", "A", "D", "G", "B", "e"], image: "/images/instruments/guitar-white.jpg", imageCredit: "Shan Lu", sort: 1 },
-  { id: "bass", labelKey: "instrument.bass", available: false, tuning: [28, 33, 38, 43], stringNames: ["E", "A", "D", "G"], image: "/images/instruments/bass-red.jpg", imageCredit: "Victor Barrios", sort: 2 },
+  { id: "bass", labelKey: "instrument.bass", available: true, tuning: [28, 33, 38, 43], stringNames: ["E", "A", "D", "G"], image: "/images/instruments/bass-red.jpg", imageCredit: "Victor Barrios", sort: 2 },
   { id: "vocal", labelKey: "instrument.vocal", available: false, tuning: [], stringNames: [], image: "/images/instruments/vocal-mic.jpg", imageCredit: "Jonathan Velasquez", sort: 3 },
   { id: "keys", labelKey: "instrument.keys", available: false, tuning: [], stringNames: [], image: "/images/instruments/keys-nord.jpg", imageCredit: "Joshua Humpfer", sort: 4 },
 ];

@@ -2,6 +2,8 @@
 
 import type { Pos } from "./music";
 
+import { matchChord, type Chroma } from "./chroma";
+
 export const STAGE_W = 1078;
 export const STAGE_H = 300;
 export const HIT_X = 120;
@@ -36,20 +38,30 @@ export class Game {
   hits = 0;
   total = 0;
   running = false;
+  /** Scales repeat for as long as you like; a song plays through once and then ends. */
+  loop = true;
   mode: Mode = "beat";
   bpm = 80;
   private seq: Pos[] = [];
+  /** True when the targets carry their own beat positions (a song): they are spawned on that timetable instead of one per beat. */
+  private timed = false;
+  /** Seconds since the run began (timed targets only) */
+  clock = 0;
   private idx = 0;
   private spawnIn = 0;
   private lastHitMidi = -1;
   private released = true;
+  private chordReleased = true;
+  private lastChordKey = "";
 
   setSequence(seq: Pos[]) {
     this.seq = seq;
+    this.timed = seq.length > 0 && seq[0].at !== undefined;
     this.reset();
   }
 
   reset() {
+    this.clock = 0;
     this.notes = [];
     this.score = 0;
     this.combo = 0;
@@ -62,25 +74,51 @@ export class Game {
     this.released = true;
   }
 
+  /** The beat the song is at right now (0 = the first beat reaching the hit line); negative during the lead-in. */
+  get songBeat(): number {
+    const travel = (STAGE_W + 20 - HIT_X) / (260 * (this.bpm / 80));
+    return (this.clock - 0.4 - travel) / (60 / this.bpm);
+  }
+
   get accuracy(): number | null {
     return this.total === 0 ? null : Math.round((this.hits / this.total) * 100);
   }
 
+  /** For solo practice over a song: the run ends at this beat (the end of the song). */
+  endAtBeat: number | null = null;
+
+  /** A song that has played to its end and has no note left to hit. */
+  get done(): boolean {
+    if (this.endAtBeat !== null) return this.songBeat >= this.endAtBeat;
+    return !this.loop && this.seq.length > 0 && this.idx >= this.seq.length && !this.notes.some((n) => n.state === "pending");
+  }
+
   private spawn() {
     if (this.seq.length === 0) return;
+    if (!this.loop && this.idx >= this.seq.length) return;
     const p = this.seq[this.idx % this.seq.length];
     this.idx++;
     this.notes.push({ ...p, x: STAGE_W + 20, state: "pending" });
   }
 
-  update(dt: number, heard: HeardPitch | null): GameEvent[] {
+  /**
+   * `chroma` is what the chord detector hears (12 pitch-class shares) or null when it is quiet; it is only used for chord targets.
+   * A strum counts once: the sound has to die down before the same chord can count again.
+   */
+  update(dt: number, heard: HeardPitch | null, chroma: Chroma | null = null): GameEvent[] {
     const events: GameEvent[] = [];
     if (!this.running) return events;
 
     if (!heard) this.released = true;
+    if (!chroma) this.chordReleased = true;
     const speed = 260 * (this.bpm / 80);
 
-    if (this.mode === "beat") {
+    this.clock += dt;
+    if (this.mode === "beat" && this.timed) {
+      // a song: each target is released early enough to reach the line exactly on its beat
+      const spb = 60 / this.bpm;
+      while (this.idx < this.seq.length && this.clock >= 0.4 + (this.seq[this.idx].at ?? 0) * spb) this.spawn();
+    } else if (this.mode === "beat") {
       this.spawnIn -= dt;
       if (this.spawnIn <= 0) {
         this.spawn();
@@ -97,7 +135,13 @@ export class Game {
 
         const inWindow = n.x <= WIN_RIGHT && (this.mode === "free" || n.x >= WIN_LEFT);
         const retrigger = n.midi !== this.lastHitMidi || this.released;
-        if (inWindow && heard && heard.clarity > 0.8 && retrigger && Math.abs(heard.midi - n.midi) < 0.6) {
+        const key = n.pcs ? n.pcs.join(",") : "";
+        const heardRight = n.pcs
+          ? matchChord(chroma, n.pcs) && (key !== this.lastChordKey || this.chordReleased)
+          : !!heard && heard.clarity > 0.8 && retrigger && Math.abs(heard.midi - n.midi) < 0.6;
+        if (inWindow && heardRight) {
+          this.lastChordKey = key;
+          this.chordReleased = false;
           n.state = "hit";
           this.hits++;
           this.total++;

@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import StringsArt from "@/components/StringsArt";
 import { useLocalePath, useT } from "@/components/I18nProvider";
 
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   const t = useT();
   const path = useLocalePath();
+  // the nav floats over hero pages; on an error page it needs the solid look
+  useEffect(() => {
+    document.documentElement.setAttribute("data-nav-solid", "");
+    return () => document.documentElement.removeAttribute("data-nav-solid");
+  }, []);
   return (
     <main className="grid min-h-svh place-items-center bg-[var(--paper)] px-6 text-center text-[var(--ink)]">
       <div className="state-pop flex max-w-md flex-col items-center gap-6">

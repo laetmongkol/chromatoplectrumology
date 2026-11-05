@@ -1,5 +1,6 @@
 // Web Audio engine: audio interface input -> effect chain -> chosen output, plus a clean tap for pitch detection.
 
+import { chromaFromSpectrum, type Chroma } from "./chroma";
 import { detectPitch, rmsOf } from "./pitch";
 
 export type EffectId = "gate" | "drive" | "eq" | "chorus" | "delay" | "reverb";
@@ -110,11 +111,17 @@ export class AudioEngine {
   private ctx: AudioContext | null = null;
   private stream: MediaStream | null = null;
   private analyser: AnalyserNode | null = null;
+  /** A second, finer analyser for hearing chords (many strings at once) */
+  private chordAnalyser: AnalyserNode | null = null;
+  private spectrum = new Float32Array(4096);
   private monitor: GainNode | null = null;
   private fx = new Map<EffectId, Fx>();
   private gateGain: GainNode | null = null;
   private gate: EffectState = { ...DEFAULT_EFFECTS.gate };
   private buf = new Float32Array(2048);
+  private minHz = 70;
+  private pitchFrame = 0;
+  private lastPitch: { hz: number; clarity: number } | null = null;
   private lfo: OscillatorNode | null = null;
 
   get running(): boolean {
@@ -159,9 +166,14 @@ export class AudioEngine {
     this.splitNode = split;
 
     const analyser = ctx.createAnalyser();
-    analyser.fftSize = 2048;
+    analyser.fftSize = this.buf.length;
     mix.connect(analyser);
     this.analyser = analyser;
+    const chordAnalyser = ctx.createAnalyser();
+    chordAnalyser.fftSize = 8192; // about 6 Hz per bin at 48 kHz: fine enough to tell neighbouring notes apart
+    chordAnalyser.smoothingTimeConstant = 0.5;
+    mix.connect(chordAnalyser);
+    this.chordAnalyser = chordAnalyser;
 
     // Chain: gate -> drive -> eq -> chorus -> delay -> reverb -> monitor
     const gateGain = ctx.createGain();
@@ -328,6 +340,24 @@ export class AudioEngine {
     fx.setEnabled(s.enabled);
   }
 
+  /**
+   * Lowest pitch the detector should look for. A bass low E (41 Hz) needs a longer analysis window than a guitar,
+   * so low ranges use a bigger buffer (and look for pitch every other frame to keep the cost down).
+   */
+  setPitchRange(minHz: number): void {
+    this.minHz = minHz;
+    const size = minHz < 60 ? 4096 : 2048;
+    if (this.buf.length !== size) this.buf = new Float32Array(size);
+    if (this.analyser) this.analyser.fftSize = size;
+  }
+
+  /** Which pitch classes are sounding (for chord targets), or null when it is quiet. Call once per frame, only when playing chords. */
+  chroma(): Chroma | null {
+    if (!this.ctx || !this.chordAnalyser) return null;
+    this.chordAnalyser.getFloatFrequencyData(this.spectrum as Float32Array<ArrayBuffer>);
+    return chromaFromSpectrum(this.spectrum, this.ctx.sampleRate, this.chordAnalyser.fftSize);
+  }
+
   /** Call once per frame: reads level + pitch from the clean input and drives the noise gate. */
   sample(): Sample | null {
     if (!this.ctx || !this.analyser) return null;
@@ -342,7 +372,12 @@ export class AudioEngine {
     }
 
     if (rms < 0.012) return { db, hz: null, clarity: 0 };
-    const p = detectPitch(this.buf, this.ctx.sampleRate);
+    if (this.buf.length > 2048 && this.pitchFrame++ % 2 === 1) {
+      const last = this.lastPitch;
+      return { db, hz: last ? last.hz : null, clarity: last ? last.clarity : 0 };
+    }
+    const p = detectPitch(this.buf, this.ctx.sampleRate, this.minHz);
+    this.lastPitch = p ? { hz: p.hz, clarity: p.clarity } : null;
     return { db, hz: p ? p.hz : null, clarity: p ? p.clarity : 0 };
   }
 
@@ -354,6 +389,7 @@ export class AudioEngine {
     if (this.ctx) await this.ctx.close();
     this.ctx = null;
     this.analyser = null;
+    this.chordAnalyser = null;
     this.monitor = null;
     this.gateGain = null;
     this.mixNode = null;
