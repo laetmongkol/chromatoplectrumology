@@ -288,7 +288,7 @@ export async function saveSong(f: FormData) {
   await requireAdmin();
   const id = int(f, "id", 0);
   const title = text(f, "title").slice(0, 120);
-  if (!title) return;
+  if (!title || clean(f.get("body")).trim() === "") return;
   const slug = slugify(text(f, "slug")) || slugify(title) || `song-${Date.now().toString(36)}`;
   const values = {
     slug,

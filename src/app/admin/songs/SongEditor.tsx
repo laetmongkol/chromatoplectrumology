@@ -63,6 +63,7 @@ export default function SongEditor({ song, instruments, save, remove }: { song: 
   const [level, setLevel] = useState<"true" | "easy">("true");
   const [bpm, setBpm] = useState(String(song?.bpm ?? 80));
   const [beats, setBeats] = useState(String(song?.beatsPerBar ?? 4));
+  const [problem, setProblem] = useState("");
   // text of every sheet, keyed "<instrument>|true" or "<instrument>|easy" (instrument "" = default)
   const [text, setText] = useState<Record<string, string>>(() => {
     const t: Record<string, string> = { "|true": song?.body ?? "", "|easy": song?.bodyEasy ?? "" };
@@ -89,7 +90,19 @@ export default function SongEditor({ song, instruments, save, remove }: { song: 
 
   return (
     <div className="grid gap-6">
-      <form action={save} className="grid gap-6 rounded-2xl border border-[var(--line)] p-6">
+      <form
+        action={save}
+        className="grid gap-6 rounded-2xl border border-[var(--line)] p-6"
+        onSubmit={(e) => {
+          // the True sheet for "All instruments" is required; if it is empty, show it instead of failing silently
+          if (get("", "true").trim() === "") {
+            e.preventDefault();
+            setInst("");
+            setLevel("true");
+            setProblem("Write the True chord sheet under All (default) first.");
+          } else setProblem("");
+        }}
+      >
         {song && <input type="hidden" name="id" value={song.id} />}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="m-0 text-xl font-normal">{song ? `Edit: ${song.title}` : "Add a song"}</h2>
@@ -141,7 +154,6 @@ export default function SongEditor({ song, instruments, save, remove }: { song: 
               <textarea
                 key={`${n}|${l}`}
                 name={n === "" ? (l === "true" ? "body" : "bodyEasy") : l === "true" ? `sheet_${n}` : `sheetEasy_${n}`}
-                required={n === "" && l === "true"}
                 rows={16}
                 value={get(n, l)}
                 onChange={(e) => setOne(n, l, e.target.value)}
@@ -172,6 +184,11 @@ export default function SongEditor({ song, instruments, save, remove }: { song: 
           <span className="text-[var(--muted)]">{timing.steps.length} chord changes</span>
         </div>
 
+        {problem && (
+          <p role="alert" className="m-0 rounded-xl border border-[var(--ink)] px-4 py-3 text-sm">
+            {problem}
+          </p>
+        )}
         <div className="flex flex-wrap gap-3">
           <button className="pill on">{song ? "Save changes" : "Add song"}</button>
           {song && (
